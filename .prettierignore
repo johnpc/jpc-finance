@@ -1,0 +1,7 @@
+.gitignore
+.prettierignore
+ios/
+*.svg
+*.png
+.env*
+.husky
