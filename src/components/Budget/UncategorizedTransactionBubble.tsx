@@ -29,7 +29,7 @@ export default function UncategorizedTransactionBubble(props: {
         margin={"auto"}
         key={props.transaction.id}
         size="large"
-        variation="success"
+        variation={props.transaction.amount > 0 ? "warning" : "success"}
         onClick={handleClickOpen}
       >
         {props.transaction.name}&nbsp;-&nbsp;$

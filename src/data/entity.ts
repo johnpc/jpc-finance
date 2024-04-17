@@ -20,6 +20,16 @@ export type TransactionEntity = {
   budgetCategoryId?: string;
 };
 
+export type AccountEntity = {
+  id: string;
+  name: string;
+  institutionName: string;
+  type: string;
+  subType: string;
+  lastFour: number;
+  tellerioAccountId?: string;
+};
+
 export type BudgetCategoryEntity = {
   id: string;
   name: string;
@@ -33,12 +43,19 @@ export type BudgetEntity = {
   budgetMonth: string;
   budgetCategories: BudgetCategoryEntity[];
 };
+
+const hydrateAccount = (account: Schema["Account"]): AccountEntity => {
+  return {
+    ...account,
+    tellerioAccountId: account.id,
+  };
+};
 const hydrateTransaction = (
   transaction: Schema["Transaction"],
 ): TransactionEntity => {
   return {
     ...transaction,
-    amount: Math.abs(transaction.amount),
+    amount: transaction.amount * -1,
     deleted: transaction.deleted ? true : false,
     plaidTransactionId: transaction.plaidTransactionId ?? undefined,
     date: new Date(transaction.date),
@@ -78,6 +95,15 @@ const hydrateBudget = async (
     ...budget,
     budgetCategories: budgetCategoryEntities,
   };
+};
+
+export const listAccounts = async (): Promise<AccountEntity[]> => {
+  const allAccounts = await client.models.Account.list();
+  return (
+    allAccounts.data?.map((account: Schema["Account"]) =>
+      hydrateAccount(account),
+    ) ?? []
+  );
 };
 
 export const listTransactions = async (
@@ -150,7 +176,7 @@ const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
-    name: "Transportation",
+    name: "Transport",
     type: "Needs",
     plannedAmount: 10000,
   });
@@ -258,6 +284,18 @@ export const createBudgetCategoryListener = (fn: () => void) => {
 
 export const updateBudgetCategoryListener = (fn: () => void) => {
   const listener = client.models.BudgetCategory.onUpdate().subscribe({
+    next: async () => {
+      fn();
+    },
+    error: (error: Error) => {
+      console.error("Subscription error", error);
+    },
+  });
+  return listener;
+};
+
+export const createAccountListener = (fn: () => void) => {
+  const listener = client.models.Account.onCreate().subscribe({
     next: async () => {
       fn();
     },

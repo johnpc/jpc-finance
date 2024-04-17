@@ -10,7 +10,9 @@ export const client = generateClient<Schema>({
   authToken: process.env.ADMIN_API_KEY,
 });
 const main = async () => {
-  const transactions = await client.models.Transaction.list();
+  const transactions = await client.models.Transaction.list({
+    limit: 10000,
+  });
   const deleteTransactionsPromises = transactions.data.map((transaction) =>
     client.models.Transaction.delete({ id: transaction.id }),
   );

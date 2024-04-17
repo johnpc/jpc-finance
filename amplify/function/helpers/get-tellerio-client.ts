@@ -2,6 +2,7 @@ import https from "https";
 import axios, { AxiosRequestConfig } from "axios";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { env } from "$amplify/env/list-transactions";
+import { endOfMonth, subMonths } from "date-fns";
 
 const getS3Contents = async (key: string) => {
   const s3Client = new S3Client();
@@ -56,8 +57,14 @@ export const listTransactions = async (accessKey: string) => {
   const transactions = await Promise.all(axiosTransactionsResponses);
   console.log({ transactions });
 
+  const filteredTransactions = transactions.flat().filter((transaction) => {
+    const transactionDate = new Date(transaction.date);
+    const endOfLastMonth = endOfMonth(subMonths(new Date(), 1));
+    return transactionDate.getTime() > endOfLastMonth.getTime();
+  });
+
   return {
-    transactions: transactions.flat(),
+    transactions: filteredTransactions,
     accounts: axiosAccountsResponse.data,
   };
 };

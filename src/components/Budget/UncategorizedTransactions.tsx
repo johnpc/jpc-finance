@@ -2,34 +2,16 @@ import { Collection, ScrollView } from "@aws-amplify/ui-react";
 import {
   BudgetCategoryEntity,
   TransactionEntity,
-  listTransactions,
 } from "../../data/entity";
-import { useEffect, useState } from "react";
 import UncategorizedTransactionBubble from "./UncategorizedTransactionBubble";
 
 export default function UncategorizedTransactions(props: {
-  budgetCategories: BudgetCategoryEntity[];
+  budgetCategories: BudgetCategoryEntity[],
+  transactions: TransactionEntity[],
 }) {
-  const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
-  useEffect(() => {
-    const setup = async () => {
-      const t = await listTransactions(new Date());
-      const filtered = t.filter(
-        (t) =>
-          !t.deleted &&
-          t.transactionMonth ===
-            new Date().toLocaleDateString(undefined, {
-              month: "2-digit",
-              year: "2-digit",
-            }) &&
-          !t.budgetCategoryId,
-      );
-      setTransactions(filtered);
-    };
-    setup();
-  }, []);
-  if (!transactions?.length) return null;
+  const uncategorizedTransactions = props.transactions?.filter(transaction => !transaction.budgetCategoryId);
 
+  if (!uncategorizedTransactions.length) return null;
   return (
     <ScrollView position={"fixed"} bottom={"0px"} height={"150px"} width="100%">
       <Collection
@@ -37,7 +19,7 @@ export default function UncategorizedTransactions(props: {
         direction={"row"}
         wrap={"nowrap"}
         gap={"20px"}
-        items={transactions}
+        items={uncategorizedTransactions}
       >
         {(transaction) => (
           <UncategorizedTransactionBubble

@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "ios": "npm run build && cap sync && cap copy ios && tsx scripts/updateIosVersion.ts && cap build ios && cap open ios",
+    "ios": "npm run build && cap sync && cap copy ios && tsx scripts/updateIosVersion.ts && cap open ios && cap build ios",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
     "aws-amplify": "^6.0.28",
     "aws-lambda": "^1.0.7",
     "axios": "^1.6.8",
+    "date-fns": "^3.6.0",
     "plaid": "^22.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

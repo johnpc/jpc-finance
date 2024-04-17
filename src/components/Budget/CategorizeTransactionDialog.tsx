@@ -17,6 +17,7 @@ import {
   Shop,
   ShoppingCart,
 } from "@mui/icons-material";
+import { useState } from "react";
 
 export interface SimpleDialogProps {
   open: boolean;
@@ -25,14 +26,26 @@ export interface SimpleDialogProps {
 }
 
 export function CategorizeTransactionDialog(props: SimpleDialogProps) {
+  const [categoryType, setCategoryType] = useState<"Income"|"Saving"|"Wants"|"Needs">();
+
   const { onClose, open } = props;
 
   const handleListItemClick = (value: BudgetCategoryEntity) => {
-    onClose(value);
+    onClickClose(value);
   };
 
-  const findIcon = (category: BudgetCategoryEntity) => {
-    switch (category.type) {
+  const handleSetCategoryClick = (value: "Income"|"Saving"|"Wants"|"Needs") => {
+    setCategoryType(value);
+  }
+
+  const onClickClose = (value?: BudgetCategoryEntity) => {
+    setCategoryType(undefined);
+    onClose(value);
+  }
+
+  const findIcon = (categoryType: "Income"|"Saving"|"Wants"|"Needs"|undefined) => {
+    if (!categoryType) return;
+    switch (categoryType) {
       case "Income":
         return <Paid />;
       case "Saving":
@@ -44,32 +57,12 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
     }
   };
 
-  const compareBudgetCategories = (
-    a: BudgetCategoryEntity,
-    b: BudgetCategoryEntity,
-  ) => {
-    if (a.type === "Income") return -1;
-
-    if (b.type === "Income") return 1;
-
-    if (a.type === "Saving") return -1;
-
-    if (b.type === "Saving") return 1;
-    if (a.type === "Needs") return -1;
-
-    if (b.type === "Needs") return 1;
-
-    if (a.type === "Wants") return -1;
-
-    return 1;
-  };
-
   return (
     <Dialog open={open}>
       <DialogTitle>Which category</DialogTitle>
-      <List sx={{ pt: 0 }}>
+      {categoryType ? <List sx={{ pt: 0 }}>
         {props.budgetCategories
-          ?.sort(compareBudgetCategories)
+          ?.filter(category => category.type === categoryType)
           .map((budgetCategory) => (
             <ListItem disableGutters key={budgetCategory.id}>
               <ListItemButton
@@ -77,11 +70,39 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
               >
                 <ListItemAvatar>
                   <Avatar sx={{ bgcolor: blue[100], color: blue[600] }}>
-                    {findIcon(budgetCategory)}
+                    {findIcon(budgetCategory.type)}
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={`${budgetCategory.type} - ${budgetCategory.name}`}
+                  primary={budgetCategory.name}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        <ListItem disableGutters>
+          <ListItemButton autoFocus onClick={() => onClickClose()}>
+            <ListItemAvatar>
+              <Avatar>
+                <Cancel />
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText primary="Close Dialog" />
+          </ListItemButton>
+        </ListItem>
+      </List> : <List sx={{ pt: 0 }}>
+        {(["Income","Saving","Wants","Needs"] as ("Income"|"Saving"|"Wants"|"Needs")[])
+          .map((budgetCategoryType) => (
+            <ListItem disableGutters key={budgetCategoryType}>
+              <ListItemButton
+                onClick={() => handleSetCategoryClick(budgetCategoryType)}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{ bgcolor: blue[100], color: blue[600] }}>
+                    {findIcon(budgetCategoryType)}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={`${budgetCategoryType} - ${budgetCategoryType}`}
                 />
               </ListItemButton>
             </ListItem>
@@ -96,7 +117,8 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
             <ListItemText primary="Close Dialog" />
           </ListItemButton>
         </ListItem>
-      </List>
+      </List>}
+
     </Dialog>
   );
 }

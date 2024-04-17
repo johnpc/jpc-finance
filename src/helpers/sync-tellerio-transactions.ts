@@ -15,11 +15,60 @@ type TellerIoTransaction = {
   status: string;
 };
 
+type TellerIoAccount = {
+  type: "credit" | "depository";
+  subtype: "credit_card" | "checking" | "saving";
+  name: string;
+  institution: {
+    name: string;
+    id: string;
+  };
+  last_four: string;
+  id: string;
+};
+export const syncTellerioAccounts = async (accounts: TellerIoAccount[]) => {
+  for (const account of accounts) {
+    const existingAccounts =
+      await client.models.Account.listByTellerioAccountId({
+        tellerioAccountId: account.id,
+      });
+
+    const existingAccount = existingAccounts.data?.find((t) => t);
+    if (existingAccount) {
+      // const updated = await client.models.Transaction.update({
+      //   ...transaction,
+      //   id: existingTransaction.id,
+      //   budgetCategoryTransactionsId: undefined,
+      // });
+      // console.log({ updated, errors: updated.errors });
+    } else {
+      const created = await client.models.Account.create({
+        name: account.name,
+        institutionName: account.institution.name,
+        type: account.type,
+        subType: account.subtype,
+        lastFour: Number(account.last_four),
+        tellerioAccountId: account.id,
+      });
+      console.log({ created, errors: created.errors });
+    }
+  }
+};
+
 export const syncTellerioTransactions = async () => {
+  const accessTokenResponse = await client.models.TellerAuthorization.list();
+  const accessToken = accessTokenResponse.data[0].accessToken;
   const fetchResult = await fetch(
     config.custom.tellerioListTransactionsFunction,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        accessToken,
+      }),
+    },
   );
   const json = await fetchResult.json();
+  await syncTellerioAccounts(json.accounts);
   const transactions = json.transactions
     .sort(
       (a: TellerIoTransaction, b: TellerIoTransaction) =>
@@ -40,21 +89,21 @@ export const syncTellerioTransactions = async () => {
   for (const transaction of transactions) {
     const existingTransactions =
       await client.models.Transaction.listByTellerioTransactionId({
-        tellerioTransactionId: transaction.id,
+        tellerioTransactionId: transaction.tellerioTransactionId,
       });
     const existingTransaction = existingTransactions.data?.find((t) => t);
-    if (existingTransaction) {
-      // const updated = await client.models.Transaction.update({
-      //   ...transaction,
-      //   id: existingTransaction.id,
-      //   budgetCategoryTransactionsId: undefined,
-      // });
-      // console.log({ updated, errors: updated.errors });
-    } else {
+    if (!existingTransaction) {
       const created = await client.models.Transaction.create({
         ...transaction,
       });
       console.log({ created, errors: created.errors });
+    } else {
+      const updated = await client.models.Transaction.update({
+        ...transaction,
+        id: existingTransaction.id,
+        budgetCategoryTransactionsId: undefined,
+      });
+      console.log({ updated, errors: updated.errors });
     }
   }
 };

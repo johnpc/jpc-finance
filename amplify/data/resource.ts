@@ -17,6 +17,17 @@ const schema = a.schema({
     })
     .secondaryIndexes((index) => [index("amplifyUserId")])
     .authorization([a.allow.owner(), a.allow.custom()]),
+  Account: a
+    .model({
+      name: a.string().required(),
+      institutionName: a.string().required(),
+      type: a.string().required(),
+      subType: a.string().required(),
+      lastFour: a.integer().required(),
+      tellerioAccountId: a.string(),
+    })
+    .secondaryIndexes((index) => [index("tellerioAccountId")])
+    .authorization([a.allow.custom(), a.allow.owner()]),
   Transaction: a
     .model({
       amount: a.integer().required(),

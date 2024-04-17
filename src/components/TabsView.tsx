@@ -1,48 +1,69 @@
-import { Loader, Tabs } from "@aws-amplify/ui-react";
+import {Loader, Tabs} from "@aws-amplify/ui-react";
 import BudgetPage from "./BudgetPage";
 import AccountsPage from "./AccountsPage";
 import SettingsPage from "./SettingsPage";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import {
+  AccountEntity,
   BudgetEntity,
   TransactionEntity,
+  createAccountListener,
   createBudgetCategoryListener,
   createTransactionListener,
   getBudgetForDate,
+  listAccounts,
   listTransactions,
   unsubscribeListener,
   updateBudgetCategoryListener,
   updateTransactionListener,
 } from "../data/entity";
-import { AuthUser, getCurrentUser } from "aws-amplify/auth";
+import {AuthUser, getCurrentUser} from "aws-amplify/auth";
+import {App} from "@capacitor/app";
 export default function TabsView() {
+  const [toggleListeners, setToggleListeners] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
+  const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [budget, setBudget] = useState<BudgetEntity>();
   const [user, setUser] = useState<AuthUser>();
 
+  const setup = async () => {
+    const budget = await getBudgetForDate(new Date());
+    setBudget(budget);
+    const transactions = await listTransactions(new Date());
+    setTransactions(transactions);
+    const accounts = await listAccounts();
+    setAccounts(accounts);
+    const user = await getCurrentUser();
+    setUser(user);
+  };
+
   useEffect(() => {
-    const setup = async () => {
-      const budget = await getBudgetForDate(new Date());
-      setBudget(budget);
-      const transactions = await listTransactions(new Date());
-      setTransactions(transactions);
-      const user = await getCurrentUser();
-      setUser(user);
-    };
     setup();
+  }, []);
+
+  useEffect(() => {
     const createBudgetCategorySubscription =
       createBudgetCategoryListener(setup);
     const updateBudgetCategorySubscription =
       updateBudgetCategoryListener(setup);
+    const createAccountSubscription = createAccountListener(setup);
     const createTransactionSubscription = createTransactionListener(setup);
     const updateTransactionSubscription = updateTransactionListener(setup);
+    App.addListener("appStateChange", async ({isActive}) => {
+      if (isActive) {
+        setToggleListeners(!toggleListeners);
+      }
+    });
     return () => {
+      unsubscribeListener(createAccountSubscription);
       unsubscribeListener(createBudgetCategorySubscription);
       unsubscribeListener(updateBudgetCategorySubscription);
       unsubscribeListener(createTransactionSubscription);
       unsubscribeListener(updateTransactionSubscription);
+      App.removeAllListeners();
     };
-  }, []);
+  }, [user, budget, transactions, accounts, toggleListeners]);
+
   if (!budget || !user) return <Loader />;
   return (
     <>
@@ -54,12 +75,18 @@ export default function TabsView() {
           {
             label: "Budget",
             value: "Budget",
-            content: <BudgetPage budget={budget} />,
+            content: <BudgetPage transactions={transactions} budget={budget} />,
           },
           {
             label: "Accounts",
             value: "Accounts",
-            content: <AccountsPage transactions={transactions} user={user} />,
+            content: (
+              <AccountsPage
+                accounts={accounts}
+                transactions={transactions}
+                user={user}
+              />
+            ),
           },
           {
             label: "Settings",

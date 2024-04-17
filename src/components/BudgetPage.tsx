@@ -15,31 +15,11 @@ import {
   BudgetEntity,
   TransactionEntity,
   createBudgetCategory,
-  listTransactions,
   updateBudgetCategory,
 } from "../data/entity";
 import UncategorizedTransactions from "./Budget/UncategorizedTransactions";
-import { useEffect, useState } from "react";
 
-export default function BudgetPage(props: { budget: BudgetEntity }) {
-  const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
-  useEffect(() => {
-    const setup = async () => {
-      const t = await listTransactions(new Date());
-      const filtered = t.filter(
-        (t) =>
-          !t.deleted &&
-          t.transactionMonth ===
-            new Date().toLocaleDateString(undefined, {
-              month: "2-digit",
-              year: "2-digit",
-            }) &&
-          !t.budgetCategoryId,
-      );
-      setTransactions(filtered);
-    };
-    setup();
-  }, []);
+export default function BudgetPage(props: { budget: BudgetEntity, transactions: TransactionEntity[] }) {
   const sections = [
     { title: "Income", subtitle: "Cash coming in" },
     { title: "Saving", subtitle: "Pay yourself first" },
@@ -77,8 +57,8 @@ export default function BudgetPage(props: { budget: BudgetEntity }) {
     .filter((budgetCategory) => budgetCategory.type !== "Income")
     .reduce((acc, expenseCategory) => expenseCategory.plannedAmount + acc, 0);
 
-  const transactionExpenseAmount = Math.abs(
-    transactions.reduce((acc, transaction) => transaction.amount + acc, 0),
+  const transactionExpenseAmount = (
+    props.transactions.reduce((acc, transaction) => transaction.amount + acc, 0)
   );
   const isBalanced = incomeAmount === expenseAmount;
 
@@ -118,23 +98,27 @@ export default function BudgetPage(props: { budget: BudgetEntity }) {
           (budgetCategory) => budgetCategory.type === section.title,
         );
         return (
-          <Card variation="elevated" key={section.title}>
-            <Table highlightOnHover={false} caption={section.title}>
+            <Table highlightOnHover={false} caption={section.title} key={section.title}>
               <TableHead>
                 <TableRow>
                   <TableCell as="th">Name</TableCell>
                   <TableCell as="th">Planned</TableCell>
                   <TableCell as="th">Spent</TableCell>
+                  <TableCell as="th">Txn</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {categories.map((category) => {
-                  const spentTotal = category.transactions.reduce(
+                  let spentTotal = category.transactions.reduce(
                     (acc, transaction) => transaction.amount + acc,
                     0,
                   );
+                  if (category.type === "Income") {
+                    spentTotal = spentTotal * -1;
+                  }
+                  const backgroundColor = spentTotal > category.plannedAmount ? "palevioletred" : "palegoldenrod";
                   return (
-                    <TableRow key={category.id}>
+                    <TableRow key={category.id} style={{backgroundColor}}>
                       <TableCell onClick={() => updateName(category)}>
                         {category.name}
                       </TableCell>
@@ -142,13 +126,15 @@ export default function BudgetPage(props: { budget: BudgetEntity }) {
                         ${category.plannedAmount / 100}
                       </TableCell>
                       <TableCell>${spentTotal / 100}</TableCell>
+                      <TableCell>{category.transactions.length}</TableCell>
                     </TableRow>
                   );
                 })}
                 <TableRow>
-                  <TableCell></TableCell>
-                  <TableCell></TableCell>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
                   <TableCell
+                    colSpan={2}
                     onClick={() =>
                       createItem(
                         section.title as
@@ -164,11 +150,11 @@ export default function BudgetPage(props: { budget: BudgetEntity }) {
                 </TableRow>
               </TableBody>
             </Table>
-          </Card>
         );
       })}
       <UncategorizedTransactions
         budgetCategories={props.budget.budgetCategories}
+        transactions={props.transactions}
       />
     </>
   );
