@@ -10,22 +10,29 @@ const schema = a.schema({
     })
     .secondaryIndexes((index) => [index("userId")])
     .authorization([a.allow.custom()]),
-
+  TellerAuthorization: a
+    .model({
+      accessToken: a.string().required(),
+      amplifyUserId: a.string().required(),
+    })
+    .secondaryIndexes((index) => [index("amplifyUserId")])
+    .authorization([a.allow.owner(), a.allow.custom()]),
   Transaction: a
     .model({
       amount: a.integer().required(),
       transactionMonth: a.string().required(),
-      authorizedDate: a.date().required(),
       date: a.date().required(),
       name: a.string().required(),
       pending: a.boolean().required(),
       deleted: a.boolean(),
       plaidTransactionId: a.string(),
+      tellerioTransactionId: a.string(),
       budgetCategory: a.belongsTo("BudgetCategory"),
     })
     .secondaryIndexes((index) => [
       index("transactionMonth"),
       index("plaidTransactionId"),
+      index("tellerioTransactionId"),
     ])
     .authorization([a.allow.custom(), a.allow.owner()]),
   Budget: a

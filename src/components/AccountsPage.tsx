@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePlaidLink } from "react-plaid-link";
 import amplifyconfiguration from "../../amplifyconfiguration.json";
+import { useTellerConnect } from "teller-connect-react";
+
 import { AuthUser } from "aws-amplify/auth";
 import {
   Button,
@@ -16,98 +18,25 @@ import {
 import { Capacitor } from "@capacitor/core";
 import Transactions from "./Transactions/Transactions";
 import { syncTransactions } from "../helpers/sync-transactions";
-import { TransactionEntity } from "../data/entity";
-
+import { TransactionEntity, createTellerAuthorization } from "../data/entity";
+import { syncTellerioTransactions } from "../helpers/sync-tellerio-transactions";
 export default function AccountsPage(props: {
   user: AuthUser;
   transactions: TransactionEntity[];
 }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [data, setData] = useState<{
-    transactions: {
-      accounts: { name: string; balances: { available: number } }[];
-    };
-  }>();
-  const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-
-  const onSuccess = useCallback(async (publicToken: string) => {
-    setLoading(true);
-    const fetchResponse = await fetch(
-      amplifyconfiguration.custom.plaidExchangePublicTokenFunction,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ publicToken, userId: props.user.userId }),
-      },
-    );
-    await fetchResponse.json();
-    await getBalance();
-  }, []);
-
-  // Creates a Link token
-  const createLinkToken = useCallback(async () => {
-    // For OAuth, use previously generated Link token
-    if (window.location.href.includes("?oauth_state_id=")) {
-      const linkToken = localStorage.getItem("link_token");
-      setToken(linkToken);
-    } else {
-      const response = await fetch(
-        amplifyconfiguration.custom.plaidCreateLinkTokenFunction,
-        {},
-      );
-      const data = await response.json();
-      setToken(data.tokenResponse.link_token);
-      localStorage.setItem("link_token", data.link_token);
-    }
-  }, [setToken]);
-
-  // Fetch balance data
-  const getBalance = useCallback(async () => {
-    setLoading(true);
-    const response = await fetch(
-      amplifyconfiguration.custom.plaidGetBalanceFunction,
-      {},
-    );
-    const data = await response.json();
-    setData(data);
-    setLoading(false);
-  }, [setData, setLoading]);
-
-  let isOauth = false;
-
-  const config = {
-    token,
-    onSuccess,
-    receivedRedirectUri: window.location.href.includes("?oauth_state_id=")
-      ? window.location.href
-      : undefined,
-  };
-
-  // For OAuth, configure the received redirect URI
-  if (window.location.href.includes("?oauth_state_id=")) {
-    config.receivedRedirectUri = window.location.href;
-    isOauth = true;
-  }
-  const { open, ready } = usePlaidLink(config);
-
-  useEffect(() => {
-    console.log({ token });
-    if (token == null) {
-      createLinkToken();
-    }
-    if (isOauth && ready) {
-      console.log({ open: "open" });
-      open();
-    }
-    getBalance();
-  }, [token, isOauth, ready, open]);
+  const { open, ready } = useTellerConnect({
+    applicationId: "app_otq7p1qk69rkla3vmq000",
+    onSuccess: (authorization) => {
+      // Save your access token here
+      console.log({ authorization });
+      createTellerAuthorization(authorization.accessToken);
+    },
+  });
 
   const syncAllTransactions = async () => {
     setSyncing(true);
-    await syncTransactions();
+    await syncTellerioTransactions();
     setSyncing(false);
   };
 
@@ -119,34 +48,6 @@ export default function AccountsPage(props: {
 
   return (
     <>
-      {loading || data == null ? (
-        <Loader variation="linear" />
-      ) : (
-        <Card variation="elevated">
-          <Table
-            highlightOnHover={false}
-            size={"large"}
-            caption={"Connected Accounts"}
-          >
-            <TableHead>
-              <TableRow>
-                <TableCell as="th">Name</TableCell>
-                <TableCell as="th">Balance</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.transactions.accounts.map((account) => {
-                return (
-                  <TableRow key={account.name}>
-                    <TableCell>{account.name}</TableCell>
-                    <TableCell>${account.balances.available}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Card>
-      )}
       <Button
         isFullWidth={true}
         variation="primary"

@@ -3,6 +3,7 @@ import config from "../../amplifyconfiguration.json";
 import { Schema } from "../../amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import { Subscription } from "rxjs";
+import { getCurrentUser } from "aws-amplify/auth";
 
 Amplify.configure(config);
 const client = generateClient<Schema>();
@@ -11,7 +12,6 @@ export type TransactionEntity = {
   id: string;
   amount: number;
   transactionMonth: string;
-  authorizedDate: Date;
   date: Date;
   name: string;
   pending: boolean;
@@ -38,9 +38,9 @@ const hydrateTransaction = (
 ): TransactionEntity => {
   return {
     ...transaction,
+    amount: Math.abs(transaction.amount),
     deleted: transaction.deleted ? true : false,
     plaidTransactionId: transaction.plaidTransactionId ?? undefined,
-    authorizedDate: new Date(transaction.authorizedDate),
     date: new Date(transaction.date),
     budgetCategoryId: transaction.budgetCategoryTransactionsId,
   };
@@ -80,16 +80,32 @@ const hydrateBudget = async (
   };
 };
 
-export const listTransactions = async (): Promise<TransactionEntity[]> => {
-  const allTransactions = await client.models.Transaction.list();
-  return allTransactions.data.map((transaction) =>
-    hydrateTransaction(transaction),
-  );
+export const listTransactions = async (
+  date: Date,
+): Promise<TransactionEntity[]> => {
+  const transactionMonth = date.toLocaleDateString(undefined, {
+    month: "2-digit",
+    year: "2-digit",
+  });
+  const allTransactions =
+    await client.models.Transaction.listByTransactionMonth({
+      transactionMonth,
+    });
+  return allTransactions.data
+    .map((transaction: Schema["Transaction"]) =>
+      hydrateTransaction(transaction),
+    )
+    .sort(
+      (a: TransactionEntity, b: TransactionEntity) =>
+        b.date.getTime() - a.date.getTime(),
+    );
 };
 
 export const listBudgets = async (): Promise<BudgetEntity[]> => {
   const allBudgets = await client.models.Budget.list();
-  const promises = allBudgets.data.map((budget) => hydrateBudget(budget));
+  const promises = allBudgets.data.map((budget: Schema["Budget"]) =>
+    hydrateBudget(budget),
+  );
   const budgetEntities = await Promise.all(promises);
   return budgetEntities;
 };
@@ -278,4 +294,14 @@ export const updateTransactionListener = (fn: () => void) => {
 
 export const unsubscribeListener = (subscription: Subscription) => {
   return subscription.unsubscribe();
+};
+
+export const createTellerAuthorization = async (authorizationToken: string) => {
+  const user = await getCurrentUser();
+  const createdTellerAuthorization =
+    await client.models.TellerAuthorization.create({
+      amplifyUserId: user.userId,
+      accessToken: authorizationToken,
+    });
+  console.log({ createdTellerAuthorization });
 };

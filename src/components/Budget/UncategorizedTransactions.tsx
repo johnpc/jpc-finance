@@ -13,7 +13,7 @@ export default function UncategorizedTransactions(props: {
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   useEffect(() => {
     const setup = async () => {
-      const t = await listTransactions();
+      const t = await listTransactions(new Date());
       const filtered = t.filter(
         (t) =>
           !t.deleted &&

@@ -1,6 +1,7 @@
 import {
   Card,
   Heading,
+  Loader,
   Table,
   TableBody,
   TableCell,
@@ -12,12 +13,33 @@ import {
 import {
   BudgetCategoryEntity,
   BudgetEntity,
+  TransactionEntity,
   createBudgetCategory,
+  listTransactions,
   updateBudgetCategory,
 } from "../data/entity";
 import UncategorizedTransactions from "./Budget/UncategorizedTransactions";
+import { useEffect, useState } from "react";
 
 export default function BudgetPage(props: { budget: BudgetEntity }) {
+  const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
+  useEffect(() => {
+    const setup = async () => {
+      const t = await listTransactions(new Date());
+      const filtered = t.filter(
+        (t) =>
+          !t.deleted &&
+          t.transactionMonth ===
+            new Date().toLocaleDateString(undefined, {
+              month: "2-digit",
+              year: "2-digit",
+            }) &&
+          !t.budgetCategoryId,
+      );
+      setTransactions(filtered);
+    };
+    setup();
+  }, []);
   const sections = [
     { title: "Income", subtitle: "Cash coming in" },
     { title: "Saving", subtitle: "Pay yourself first" },
@@ -55,6 +77,9 @@ export default function BudgetPage(props: { budget: BudgetEntity }) {
     .filter((budgetCategory) => budgetCategory.type !== "Income")
     .reduce((acc, expenseCategory) => expenseCategory.plannedAmount + acc, 0);
 
+  const transactionExpenseAmount = Math.abs(
+    transactions.reduce((acc, transaction) => transaction.amount + acc, 0),
+  );
   const isBalanced = incomeAmount === expenseAmount;
 
   return (
@@ -73,6 +98,20 @@ export default function BudgetPage(props: { budget: BudgetEntity }) {
             </Text>
           </View>
         )}
+      </Card>
+      <Card>
+        <View textAlign={"center"}>
+          <Text as={"p"}>
+            Spent ${(transactionExpenseAmount / 100).toFixed(2)} of $
+            {(incomeAmount / 100).toFixed(2)}
+          </Text>
+        </View>
+        <Loader
+          variation="linear"
+          percentage={(transactionExpenseAmount / incomeAmount) * 100}
+          isDeterminate
+          isPercentageTextHidden
+        />
       </Card>
       {sections.map((section) => {
         const categories = props.budget.budgetCategories.filter(
@@ -110,7 +149,6 @@ export default function BudgetPage(props: { budget: BudgetEntity }) {
                   <TableCell></TableCell>
                   <TableCell></TableCell>
                   <TableCell
-                    as={"a"}
                     onClick={() =>
                       createItem(
                         section.title as

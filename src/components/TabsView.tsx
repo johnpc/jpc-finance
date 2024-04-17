@@ -24,7 +24,7 @@ export default function TabsView() {
     const setup = async () => {
       const budget = await getBudgetForDate(new Date());
       setBudget(budget);
-      const transactions = await listTransactions();
+      const transactions = await listTransactions(new Date());
       setTransactions(transactions);
       const user = await getCurrentUser();
       setUser(user);

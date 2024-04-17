@@ -2,7 +2,9 @@ import { defineBackend, defineFunction } from "@aws-amplify/backend";
 import { Function, FunctionUrlAuthType } from "aws-cdk-lib/aws-lambda";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
+import { storage } from "./storage/resource";
 import dotenv from "dotenv";
+import { tellerioListTransactionsFunction } from "./function/tellerio/resource";
 dotenv.config();
 
 const plaidCreateLinkTokenFunction = defineFunction({
@@ -28,8 +30,10 @@ const backend = defineBackend({
   plaidCreateLinkTokenFunction,
   plaidExchangePublicTokenFunction,
   plaidGetBalanceFunction,
+  tellerioListTransactionsFunction,
   auth,
   data: data(authFunction),
+  storage,
 });
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -42,6 +46,7 @@ underlyingAuthLambda.addEnvironment(
 const outputs = {} as { [key: string]: string };
 [
   { name: "helloWorldFunction" },
+  { name: "tellerioListTransactionsFunction" },
   { name: "plaidCreateLinkTokenFunction" },
   { name: "plaidExchangePublicTokenFunction" },
   { name: "plaidGetBalanceFunction" },
