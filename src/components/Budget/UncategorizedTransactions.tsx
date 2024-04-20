@@ -1,15 +1,14 @@
 import { Collection, ScrollView } from "@aws-amplify/ui-react";
-import {
-  BudgetCategoryEntity,
-  TransactionEntity,
-} from "../../data/entity";
+import { BudgetCategoryEntity, TransactionEntity } from "../../data/entity";
 import UncategorizedTransactionBubble from "./UncategorizedTransactionBubble";
 
 export default function UncategorizedTransactions(props: {
-  budgetCategories: BudgetCategoryEntity[],
-  transactions: TransactionEntity[],
+  budgetCategories: BudgetCategoryEntity[];
+  transactions: TransactionEntity[];
 }) {
-  const uncategorizedTransactions = props.transactions?.filter(transaction => !transaction.budgetCategoryId);
+  const uncategorizedTransactions = props.transactions?.filter(
+    (transaction) => !transaction.budgetCategoryId,
+  );
 
   if (!uncategorizedTransactions.length) return null;
   return (

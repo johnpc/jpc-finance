@@ -1,8 +1,8 @@
-import {Loader, Tabs} from "@aws-amplify/ui-react";
+import { Loader, Tabs } from "@aws-amplify/ui-react";
 import BudgetPage from "./BudgetPage";
 import AccountsPage from "./AccountsPage";
 import SettingsPage from "./SettingsPage";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import {
   AccountEntity,
   BudgetEntity,
@@ -17,8 +17,8 @@ import {
   updateBudgetCategoryListener,
   updateTransactionListener,
 } from "../data/entity";
-import {AuthUser, getCurrentUser} from "aws-amplify/auth";
-import {App} from "@capacitor/app";
+import { AuthUser, getCurrentUser } from "aws-amplify/auth";
+import { App } from "@capacitor/app";
 export default function TabsView() {
   const [toggleListeners, setToggleListeners] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
@@ -49,7 +49,7 @@ export default function TabsView() {
     const createAccountSubscription = createAccountListener(setup);
     const createTransactionSubscription = createTransactionListener(setup);
     const updateTransactionSubscription = updateTransactionListener(setup);
-    App.addListener("appStateChange", async ({isActive}) => {
+    App.addListener("appStateChange", async ({ isActive }) => {
       if (isActive) {
         setToggleListeners(!toggleListeners);
       }

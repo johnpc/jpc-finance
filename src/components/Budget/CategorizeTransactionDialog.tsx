@@ -26,7 +26,9 @@ export interface SimpleDialogProps {
 }
 
 export function CategorizeTransactionDialog(props: SimpleDialogProps) {
-  const [categoryType, setCategoryType] = useState<"Income"|"Saving"|"Wants"|"Needs">();
+  const [categoryType, setCategoryType] = useState<
+    "Income" | "Saving" | "Wants" | "Needs"
+  >();
 
   const { onClose, open } = props;
 
@@ -34,16 +36,20 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
     onClickClose(value);
   };
 
-  const handleSetCategoryClick = (value: "Income"|"Saving"|"Wants"|"Needs") => {
+  const handleSetCategoryClick = (
+    value: "Income" | "Saving" | "Wants" | "Needs",
+  ) => {
     setCategoryType(value);
-  }
+  };
 
   const onClickClose = (value?: BudgetCategoryEntity) => {
     setCategoryType(undefined);
     onClose(value);
-  }
+  };
 
-  const findIcon = (categoryType: "Income"|"Saving"|"Wants"|"Needs"|undefined) => {
+  const findIcon = (
+    categoryType: "Income" | "Saving" | "Wants" | "Needs" | undefined,
+  ) => {
     if (!categoryType) return;
     switch (categoryType) {
       case "Income":
@@ -60,38 +66,45 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
   return (
     <Dialog open={open}>
       <DialogTitle>Which category</DialogTitle>
-      {categoryType ? <List sx={{ pt: 0 }}>
-        {props.budgetCategories
-          ?.filter(category => category.type === categoryType)
-          .map((budgetCategory) => (
-            <ListItem disableGutters key={budgetCategory.id}>
-              <ListItemButton
-                onClick={() => handleListItemClick(budgetCategory)}
-              >
-                <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: blue[100], color: blue[600] }}>
-                    {findIcon(budgetCategory.type)}
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={budgetCategory.name}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        <ListItem disableGutters>
-          <ListItemButton autoFocus onClick={() => onClickClose()}>
-            <ListItemAvatar>
-              <Avatar>
-                <Cancel />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary="Close Dialog" />
-          </ListItemButton>
-        </ListItem>
-      </List> : <List sx={{ pt: 0 }}>
-        {(["Income","Saving","Wants","Needs"] as ("Income"|"Saving"|"Wants"|"Needs")[])
-          .map((budgetCategoryType) => (
+      {categoryType ? (
+        <List sx={{ pt: 0 }}>
+          {props.budgetCategories
+            ?.filter((category) => category.type === categoryType)
+            .map((budgetCategory) => (
+              <ListItem disableGutters key={budgetCategory.id}>
+                <ListItemButton
+                  onClick={() => handleListItemClick(budgetCategory)}
+                >
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: blue[100], color: blue[600] }}>
+                      {findIcon(budgetCategory.type)}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText primary={budgetCategory.name} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          <ListItem disableGutters>
+            <ListItemButton autoFocus onClick={() => onClickClose()}>
+              <ListItemAvatar>
+                <Avatar>
+                  <Cancel />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary="Close Dialog" />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      ) : (
+        <List sx={{ pt: 0 }}>
+          {(
+            ["Income", "Saving", "Wants", "Needs"] as (
+              | "Income"
+              | "Saving"
+              | "Wants"
+              | "Needs"
+            )[]
+          ).map((budgetCategoryType) => (
             <ListItem disableGutters key={budgetCategoryType}>
               <ListItemButton
                 onClick={() => handleSetCategoryClick(budgetCategoryType)}
@@ -107,18 +120,18 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
               </ListItemButton>
             </ListItem>
           ))}
-        <ListItem disableGutters>
-          <ListItemButton autoFocus onClick={() => onClose()}>
-            <ListItemAvatar>
-              <Avatar>
-                <Cancel />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary="Close Dialog" />
-          </ListItemButton>
-        </ListItem>
-      </List>}
-
+          <ListItem disableGutters>
+            <ListItemButton autoFocus onClick={() => onClose()}>
+              <ListItemAvatar>
+                <Avatar>
+                  <Cancel />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText primary="Close Dialog" />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      )}
     </Dialog>
   );
 }

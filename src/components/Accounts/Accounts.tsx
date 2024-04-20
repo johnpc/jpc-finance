@@ -1,9 +1,13 @@
-import { Table, TableBody, TableCell, TableHead, TableRow } from "@aws-amplify/ui-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from "@aws-amplify/ui-react";
 import { AccountEntity } from "../../data/entity";
 
-export default function Accounts(props: {
-	accounts: AccountEntity[];
-}) {
+export default function Accounts(props: { accounts: AccountEntity[] }) {
   return (
     <>
       <Table highlightOnHover={false} caption={"Your Linked Accounts"}>
@@ -25,6 +29,5 @@ export default function Accounts(props: {
         </TableBody>
       </Table>
     </>
-
   );
 }

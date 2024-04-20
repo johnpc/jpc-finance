@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useTellerConnect } from "teller-connect-react";
 
 import { AuthUser } from "aws-amplify/auth";
-import {
-  Button,
-  Divider,
-} from "@aws-amplify/ui-react";
+import { Button, Divider } from "@aws-amplify/ui-react";
 import { Capacitor } from "@capacitor/core";
 import Transactions from "./Transactions/Transactions";
 import { syncTransactions } from "../helpers/sync-transactions";
-import { AccountEntity, TransactionEntity, createTellerAuthorization } from "../data/entity";
+import {
+  AccountEntity,
+  TransactionEntity,
+  createTellerAuthorization,
+} from "../data/entity";
 import { syncTellerioTransactions } from "../helpers/sync-tellerio-transactions";
 import Accounts from "./Accounts/Accounts";
 export default function AccountsPage(props: {
