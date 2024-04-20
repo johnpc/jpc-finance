@@ -52,7 +52,7 @@ export default function AccountsPage(props: {
       >
         Add Bank / Card
       </Button>
-      {Capacitor.getPlatform() !== "ios" ? null : (
+      {Capacitor.getPlatform() !== "TODO: Add FinanceKit" ? null : (
         <>
           <Divider margin={"20px"} />
           <Button onClick={testFinanceKit} isFullWidth={true}>

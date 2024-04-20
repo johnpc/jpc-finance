@@ -1,4 +1,4 @@
-import { Button, Card } from "@aws-amplify/ui-react";
+import { Button } from "@aws-amplify/ui-react";
 import { signOut } from "aws-amplify/auth";
 
 export default function SignOutButton() {
@@ -7,10 +7,8 @@ export default function SignOutButton() {
   };
 
   return (
-    <Card>
-      <Button isFullWidth={true} variation="destructive" onClick={onSignOut}>
-        Sign Out
-      </Button>
-    </Card>
+    <Button isFullWidth={true} variation="destructive" onClick={onSignOut}>
+      Sign Out
+    </Button>
   );
 }
