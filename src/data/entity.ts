@@ -17,7 +17,7 @@ export type TransactionEntity = {
   pending: boolean;
   deleted?: boolean;
   plaidTransactionId?: string;
-  budgetCategoryId?: string;
+  budgetCategoryId?: string | null;
 };
 
 export type AccountEntity = {
@@ -266,7 +266,7 @@ export const updateBudgetCategory = async (
 export const updateTransaction = async (transaction: TransactionEntity) => {
   await client.models.Transaction.update({
     id: transaction.id,
-    budgetCategoryTransactionsId: transaction.budgetCategoryId,
+    budgetCategoryTransactionsId: transaction.budgetCategoryId as string,
   });
 };
 
@@ -294,10 +294,10 @@ export const updateBudgetCategoryListener = (fn: () => void) => {
   return listener;
 };
 
-export const createAccountListener = (fn: () => void) => {
+export const createAccountListener = (fn: (account: AccountEntity) => void) => {
   const listener = client.models.Account.onCreate().subscribe({
-    next: async () => {
-      fn();
+    next: async (account: Schema["Account"]) => {
+      fn(hydrateAccount(account));
     },
     error: (error: Error) => {
       console.error("Subscription error", error);
@@ -306,10 +306,12 @@ export const createAccountListener = (fn: () => void) => {
   return listener;
 };
 
-export const createTransactionListener = (fn: () => void) => {
+export const createTransactionListener = (
+  fn: (transaction: TransactionEntity) => void,
+) => {
   const listener = client.models.Transaction.onCreate().subscribe({
-    next: async () => {
-      fn();
+    next: async (transaction: Schema["Transaction"]) => {
+      fn(hydrateTransaction(transaction));
     },
     error: (error: Error) => {
       console.error("Subscription error", error);
@@ -318,10 +320,12 @@ export const createTransactionListener = (fn: () => void) => {
   return listener;
 };
 
-export const updateTransactionListener = (fn: () => void) => {
+export const updateTransactionListener = (
+  fn: (transaction: TransactionEntity) => void,
+) => {
   const listener = client.models.Transaction.onUpdate().subscribe({
-    next: async () => {
-      fn();
+    next: async (transaction: Schema["Transaction"]) => {
+      fn(hydrateTransaction(transaction));
     },
     error: (error: Error) => {
       console.error("Subscription error", error);

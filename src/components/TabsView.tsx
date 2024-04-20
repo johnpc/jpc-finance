@@ -42,13 +42,42 @@ export default function TabsView() {
   }, []);
 
   useEffect(() => {
-    const createBudgetCategorySubscription =
-      createBudgetCategoryListener(setup);
-    const updateBudgetCategorySubscription =
-      updateBudgetCategoryListener(setup);
-    const createAccountSubscription = createAccountListener(setup);
-    const createTransactionSubscription = createTransactionListener(setup);
-    const updateTransactionSubscription = updateTransactionListener(setup);
+    const createBudgetCategorySubscription = createBudgetCategoryListener(
+      async () => {
+        const budget = await getBudgetForDate(new Date());
+        setBudget(budget);
+      },
+    );
+    const updateBudgetCategorySubscription = updateBudgetCategoryListener(
+      async () => {
+        const budget = await getBudgetForDate(new Date());
+        setBudget(budget);
+      },
+    );
+    const createAccountSubscription = createAccountListener(
+      async (account: AccountEntity) => {
+        setAccounts([...accounts, account]);
+      },
+    );
+    const createTransactionSubscription = createTransactionListener(
+      async (transaction: TransactionEntity) => {
+        setTransactions([...transactions, transaction]);
+      },
+    );
+    const updateTransactionSubscription = updateTransactionListener(
+      async (transaction: TransactionEntity) => {
+        const updatedTransactions = transactions.map((t) => {
+          if (t.id === transaction.id) {
+            return transaction;
+          }
+          return t;
+        });
+        setTransactions(updatedTransactions);
+        // updating transaction budget category requires budget update
+        const budget = await getBudgetForDate(new Date());
+        setBudget(budget);
+      },
+    );
     App.addListener("appStateChange", async ({ isActive }) => {
       if (isActive) {
         setToggleListeners(!toggleListeners);
