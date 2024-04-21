@@ -16,21 +16,21 @@ import {
   removeBudgetCategory,
   updateBudgetCategory,
 } from "../../data/entity";
-import {Fragment, useState} from "react";
+import { Fragment, useState } from "react";
 
 export default function BudgetTable(props: {
   budget: BudgetEntity;
   transactions: TransactionEntity[];
   onClickBudgetCategory: (category: BudgetCategoryEntity) => void;
 }) {
-  const {tokens} = useTheme();
+  const { tokens } = useTheme();
   const [preferRemaining, setPreferRemaining] = useState<boolean>(false);
 
   const sections = [
-    {title: "Income", subtitle: "Cash coming in"},
-    {title: "Saving", subtitle: "Pay yourself first"},
-    {title: "Needs", subtitle: "Pay your bills"},
-    {title: "Wants", subtitle: "Treat yo self"},
+    { title: "Income", subtitle: "Cash coming in" },
+    { title: "Saving", subtitle: "Pay yourself first" },
+    { title: "Needs", subtitle: "Pay your bills" },
+    { title: "Wants", subtitle: "Treat yo self" },
   ];
 
   const createItem = async (type: "Saving" | "Needs" | "Wants" | "Income") => {
@@ -63,7 +63,7 @@ export default function BudgetTable(props: {
     <>
       {sections.map((section) => {
         const categories = props.budget.budgetCategories.filter(
-          (budgetCategory) => budgetCategory.type === section.title
+          (budgetCategory) => budgetCategory.type === section.title,
         );
         return (
           <Fragment>
@@ -91,20 +91,21 @@ export default function BudgetTable(props: {
                   const planned = category.plannedAmount / 100;
                   let total = category.transactions.reduce(
                     (acc, transaction) => transaction.amount / 100 + acc,
-                    0
+                    0,
                   );
                   if (category.type === "Income") {
                     total = total * -1;
                   }
                   const remaining = planned - total;
-                  const backgroundColor =
-                    total > planned
-                      ? tokens.colors.red[20].value
-                      : total === planned
-                        ? tokens.colors.green[20].value
-                        : tokens.colors.yellow[20].value;
+                  let backgroundColor = "";
+                  if (total > planned - planned * 0.1)
+                    backgroundColor = tokens.colors.yellow[20].value;
+                  if (total > planned - planned * 0.01)
+                    backgroundColor = tokens.colors.green[20].value;
+                  if (total > planned)
+                    backgroundColor = tokens.colors.red[20].value;
                   return (
-                    <TableRow key={category.id} style={{backgroundColor}}>
+                    <TableRow key={category.id} style={{ backgroundColor }}>
                       <TableCell onClick={() => updateName(category)}>
                         {category.name}
                       </TableCell>
@@ -143,7 +144,11 @@ export default function BudgetTable(props: {
                     colSpan={2}
                     onClick={() =>
                       createItem(
-                        section.title as "Saving" | "Needs" | "Wants" | "Income"
+                        section.title as
+                          | "Saving"
+                          | "Needs"
+                          | "Wants"
+                          | "Income",
                       )
                     }
                   >
@@ -155,7 +160,7 @@ export default function BudgetTable(props: {
           </Fragment>
         );
       })}
-      <Divider style={{marginBottom: "20px", marginTop: "20px"}} />
+      <Divider style={{ marginBottom: "20px", marginTop: "20px" }} />
       <Button isFullWidth onClick={() => togglePreferRemaining()}>
         {preferRemaining ? "Prefer Planned/Total" : "Prefer Remaining"}
       </Button>
