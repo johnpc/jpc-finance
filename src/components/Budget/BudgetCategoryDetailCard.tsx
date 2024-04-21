@@ -66,7 +66,7 @@ export const BudgetCategoryDetailCard = (props: {
               variation="warning"
               onClick={() => onRemoveTransaction(props.transaction)}
             >
-              Delete it
+              Undo categorization
             </Button>
           </Flex>
         </Flex>

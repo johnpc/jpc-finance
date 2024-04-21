@@ -101,7 +101,7 @@ export default function TabsView() {
     };
   }, [user, budget, transactions, accounts, toggleListeners]);
 
-  if (!budget || !user) return <Loader />;
+  if (!budget || !user) return <Loader variation="linear" />;
   return (
     <>
       <Tabs
@@ -128,7 +128,7 @@ export default function TabsView() {
           {
             label: "Settings",
             value: "Settings",
-            content: <SettingsPage />,
+            content: <SettingsPage budget={budget} />,
           },
         ]}
       />
