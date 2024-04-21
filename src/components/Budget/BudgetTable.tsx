@@ -10,6 +10,7 @@ import {
   BudgetEntity,
   TransactionEntity,
   createBudgetCategory,
+  removeBudgetCategory,
   updateBudgetCategory,
 } from "../../data/entity";
 
@@ -63,7 +64,7 @@ export default function BudgetTable(props: {
                 <TableCell as="th">Name</TableCell>
                 <TableCell as="th">Planned</TableCell>
                 <TableCell as="th">Spent</TableCell>
-                <TableCell as="th">Txn</TableCell>
+                <TableCell as="th"></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -87,11 +88,13 @@ export default function BudgetTable(props: {
                     <TableCell onClick={() => updatePlannedAmount(category)}>
                       ${category.plannedAmount / 100}
                     </TableCell>
-                    <TableCell>${spentTotal / 100}</TableCell>
                     <TableCell
                       onClick={() => props.onClickBudgetCategory(category)}
                     >
-                      {category.transactions.length}
+                      ${spentTotal / 100}
+                    </TableCell>
+                    <TableCell onClick={() => removeBudgetCategory(category)}>
+                      ❌
                     </TableCell>
                   </TableRow>
                 );

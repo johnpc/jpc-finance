@@ -8,6 +8,7 @@ import {
 import { AccountEntity } from "../../data/entity";
 
 export default function Accounts(props: { accounts: AccountEntity[] }) {
+  if (!props.accounts.length) return <>No linked accounts</>;
   return (
     <>
       <Table highlightOnHover={false} caption={"Your Linked Accounts"}>

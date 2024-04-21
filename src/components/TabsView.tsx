@@ -10,6 +10,7 @@ import {
   createAccountListener,
   createBudgetCategoryListener,
   createTransactionListener,
+  deleteBudgetCategoryListener,
   getBudgetForDate,
   listAccounts,
   listTransactions,
@@ -54,6 +55,12 @@ export default function TabsView() {
         setBudget(budget);
       },
     );
+    const removeBudgetCategorySubscription = deleteBudgetCategoryListener(
+      async () => {
+        const budget = await getBudgetForDate(new Date());
+        setBudget(budget);
+      },
+    );
     const createAccountSubscription = createAccountListener(
       async (account: AccountEntity) => {
         setAccounts([...accounts, account]);
@@ -87,6 +94,7 @@ export default function TabsView() {
       unsubscribeListener(createAccountSubscription);
       unsubscribeListener(createBudgetCategorySubscription);
       unsubscribeListener(updateBudgetCategorySubscription);
+      unsubscribeListener(removeBudgetCategorySubscription);
       unsubscribeListener(createTransactionSubscription);
       unsubscribeListener(updateTransactionSubscription);
       App.removeAllListeners();

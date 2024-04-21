@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "prod-config": "amplify generate config --app-id d1vtztqzhv9x55 --branch main --profile personal",
     "ios": "npm run prod-config && npm run dev-ios",
-    "dev-ios": "npm run build && cap sync && cap copy ios && tsx scripts/updateIosVersion.ts && cap open ios && cap build ios",
+    "dev-ios": "npm run build && cap sync && cap copy ios && tsx scripts/updateIosVersion.ts && cap open ios",
     "prepare": "husky install"
   },
   "dependencies": {

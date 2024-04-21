@@ -4,5 +4,6 @@ ios/
 *.svg
 *.png
 *.webp
+*.avif
 .env*
 .husky

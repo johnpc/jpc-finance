@@ -10,6 +10,7 @@ import { TransactionEntity } from "../../data/entity";
 export default function Transactions(props: {
   transactions: TransactionEntity[];
 }) {
+  if (!props.transactions.length) return <>No synced transactions</>;
   return (
     <>
       <Table highlightOnHover={false} caption={"Your Transactions"}>

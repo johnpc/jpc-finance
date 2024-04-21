@@ -290,6 +290,19 @@ export const updateBudgetCategory = async (
   });
 };
 
+export const removeBudgetCategory = async (
+  budgetCategory: BudgetCategoryEntity,
+) => {
+  const promises = budgetCategory.transactions.map((transaction) => {
+    transaction.budgetCategoryId = null;
+    return updateTransaction(transaction);
+  });
+  await Promise.all(promises);
+  await client.models.BudgetCategory.delete({
+    id: budgetCategory.id,
+  });
+};
+
 export const updateTransaction = async (transaction: TransactionEntity) => {
   await client.models.Transaction.update({
     id: transaction.id,
@@ -311,6 +324,18 @@ export const createBudgetCategoryListener = (fn: () => void) => {
 
 export const updateBudgetCategoryListener = (fn: () => void) => {
   const listener = client.models.BudgetCategory.onUpdate().subscribe({
+    next: async () => {
+      fn();
+    },
+    error: (error: Error) => {
+      console.error("Subscription error", error);
+    },
+  });
+  return listener;
+};
+
+export const deleteBudgetCategoryListener = (fn: () => void) => {
+  const listener = client.models.BudgetCategory.onDelete().subscribe({
     next: async () => {
       fn();
     },

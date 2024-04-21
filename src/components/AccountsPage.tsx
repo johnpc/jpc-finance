@@ -42,6 +42,16 @@ export default function AccountsPage(props: {
 
   return (
     <>
+      {props.accounts.length ? (
+        <Button
+          isFullWidth={true}
+          isLoading={syncing}
+          variation="link"
+          onClick={() => syncAllTransactions()}
+        >
+          Sync Transactions Now
+        </Button>
+      ) : null}
       <Accounts accounts={props.accounts} />
       <Divider margin={"20px"} />
       <Button
@@ -61,14 +71,6 @@ export default function AccountsPage(props: {
         </>
       )}
       <Divider margin={"20px"} />
-      <Button
-        isFullWidth={true}
-        isLoading={syncing}
-        variation="link"
-        onClick={() => syncAllTransactions()}
-      >
-        Sync Transactions Now
-      </Button>
       <Transactions transactions={props.transactions} />
     </>
   );
