@@ -115,7 +115,7 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={`${budgetCategoryType} - ${budgetCategoryType}`}
+                  primary={budgetCategoryType}
                 />
               </ListItemButton>
             </ListItem>

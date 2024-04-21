@@ -45,7 +45,7 @@ export const Footer = () => {
               </Button>
               <Text as="span">finance.jpc.io is open source.</Text>
               {Capacitor.getPlatform() === "ios" ? null : (
-                <Link href="https://apps.apple.com/us/app/jpc-fit/id6482482386">
+                <Link href="https://testflight.apple.com/join/cViA1MLc">
                   Download iOS app
                 </Link>
               )}
