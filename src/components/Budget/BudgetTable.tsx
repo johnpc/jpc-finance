@@ -80,7 +80,7 @@ export default function BudgetTable(props: {
                   ) : (
                     <Fragment>
                       <TableCell as="th">Planned</TableCell>
-                      <TableCell as="th">Spent</TableCell>
+                      <TableCell as="th">Total</TableCell>
                     </Fragment>
                   )}
                   <TableCell as="th"></TableCell>
