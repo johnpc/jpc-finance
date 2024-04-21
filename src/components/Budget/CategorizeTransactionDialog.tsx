@@ -114,9 +114,7 @@ export function CategorizeTransactionDialog(props: SimpleDialogProps) {
                     {findIcon(budgetCategoryType)}
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText
-                  primary={budgetCategoryType}
-                />
+                <ListItemText primary={budgetCategoryType} />
               </ListItemButton>
             </ListItem>
           ))}

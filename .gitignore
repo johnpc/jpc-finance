@@ -29,3 +29,4 @@ amplify_outputs*
 amplifyconfiguration*
 .env
 .eslintcache
+*.pem

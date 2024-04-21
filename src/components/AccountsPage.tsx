@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useTellerConnect } from "teller-connect-react";
-
 import { AuthUser } from "aws-amplify/auth";
 import { Button, Divider } from "@aws-amplify/ui-react";
 import { Capacitor } from "@capacitor/core";
 import Transactions from "./Transactions/Transactions";
-import { syncTransactions } from "../helpers/sync-transactions";
 import {
   AccountEntity,
   TransactionEntity,
@@ -21,12 +19,17 @@ export default function AccountsPage(props: {
   const [syncing, setSyncing] = useState(false);
   const { open, ready } = useTellerConnect({
     applicationId: "app_otq7p1qk69rkla3vmq000",
-    onSuccess: (authorization) => {
+    onSuccess: async (authorization) => {
       // Save your access token here
       console.log({ authorization });
-      createTellerAuthorization(authorization.accessToken);
+      await createTellerAuthorization(authorization.accessToken);
+      await syncAllTransactions();
     },
   });
+
+  const handleAddAccount = async () => {
+    open();
+  };
 
   const syncAllTransactions = async () => {
     setSyncing(true);
@@ -35,17 +38,16 @@ export default function AccountsPage(props: {
   };
 
   const testFinanceKit = async () => {
-    await syncTransactions();
-    // JPCFinanceKit.repeatt({ value: "wassap!!" });
-    // JPCFinanceKit.requestAuthorization();
+    console.log("TODO: Add FinanceKit support");
   };
 
   return (
     <>
-      {props.accounts.length ? (
+      {syncing || props.accounts.length ? (
         <Button
           isFullWidth={true}
           isLoading={syncing}
+          loadingText="Syncing"
           variation="link"
           onClick={() => syncAllTransactions()}
         >
@@ -57,7 +59,7 @@ export default function AccountsPage(props: {
       <Button
         isFullWidth={true}
         variation="primary"
-        onClick={() => open()}
+        onClick={() => handleAddAccount()}
         disabled={!ready}
       >
         Add Bank / Card

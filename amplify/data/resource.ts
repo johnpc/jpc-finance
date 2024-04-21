@@ -25,6 +25,7 @@ const schema = a.schema({
       subType: a.string().required(),
       lastFour: a.integer().required(),
       tellerioAccountId: a.string(),
+      owner: a.string().required(),
     })
     .secondaryIndexes((index) => [index("tellerioAccountId")])
     .authorization([a.allow.custom(), a.allow.owner()]),
@@ -39,6 +40,7 @@ const schema = a.schema({
       plaidTransactionId: a.string(),
       tellerioTransactionId: a.string(),
       budgetCategory: a.belongsTo("BudgetCategory"),
+      owner: a.string().required(),
     })
     .secondaryIndexes((index) => [
       index("transactionMonth"),
