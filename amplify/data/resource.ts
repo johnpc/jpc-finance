@@ -3,13 +3,6 @@ import { AmplifyFunction, ConstructFactory } from "@aws-amplify/plugin-types";
 
 const schema = a.schema({
   BudgetCategoryType: a.enum(["Saving", "Needs", "Wants", "Income"]),
-  PlaidAuthorization: a
-    .model({
-      accessToken: a.string().required(),
-      userId: a.string().required(),
-    })
-    .secondaryIndexes((index) => [index("userId")])
-    .authorization([a.allow.custom()]),
   TellerAuthorization: a
     .model({
       accessToken: a.string().required(),
@@ -37,14 +30,12 @@ const schema = a.schema({
       name: a.string().required(),
       pending: a.boolean().required(),
       deleted: a.boolean(),
-      plaidTransactionId: a.string(),
       tellerioTransactionId: a.string(),
       budgetCategory: a.belongsTo("BudgetCategory"),
       owner: a.string().required(),
     })
     .secondaryIndexes((index) => [
       index("transactionMonth"),
-      index("plaidTransactionId"),
       index("tellerioTransactionId"),
     ])
     .authorization([a.allow.custom(), a.allow.owner()]),

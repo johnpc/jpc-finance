@@ -7,16 +7,6 @@ import dotenv from "dotenv";
 import { tellerioListTransactionsFunction } from "./function/tellerio/resource";
 dotenv.config();
 
-const plaidCreateLinkTokenFunction = defineFunction({
-  entry: "./function/plaid/create-link-token.ts",
-});
-const plaidExchangePublicTokenFunction = defineFunction({
-  entry: "./function/plaid/exchange-public-token.ts",
-});
-const plaidGetBalanceFunction = defineFunction({
-  entry: "./function/plaid/get-balance.ts",
-  timeoutSeconds: 30,
-});
 const helloWorldFunction = defineFunction({
   entry: "./function/hello-world.ts",
 });
@@ -27,9 +17,6 @@ const authFunction = defineFunction({
 const backend = defineBackend({
   authFunction,
   helloWorldFunction,
-  plaidCreateLinkTokenFunction,
-  plaidExchangePublicTokenFunction,
-  plaidGetBalanceFunction,
   tellerioListTransactionsFunction,
   auth,
   data: data(authFunction),
@@ -47,24 +34,10 @@ const outputs = {} as { [key: string]: string };
 [
   { name: "helloWorldFunction" },
   { name: "tellerioListTransactionsFunction" },
-  { name: "plaidCreateLinkTokenFunction" },
-  { name: "plaidExchangePublicTokenFunction" },
-  { name: "plaidGetBalanceFunction" },
 ].forEach((functionInfo) => {
-  backend.plaidCreateLinkTokenFunction;
   const underlyingLambda =
     // eslint-disable-next-line
     (backend as any)[functionInfo.name].resources.lambda as Function;
-  underlyingLambda.addEnvironment("PLAID_SECRET", process.env.PLAID_SECRET!);
-  underlyingLambda.addEnvironment(
-    "PLAID_CLIENT_ID",
-    process.env.PLAID_CLIENT_ID!,
-  );
-  underlyingLambda.addEnvironment("PLAID_ENV", process.env.PLAID_ENV!);
-  underlyingLambda.addEnvironment(
-    "PLAID_SANDBOX_REDIRECT_URI",
-    process.env.PLAID_SANDBOX_REDIRECT_URI!,
-  );
   underlyingLambda.addEnvironment("ADMIN_API_KEY", process.env.ADMIN_API_KEY!);
   const functionUrl = underlyingLambda.addFunctionUrl({
     authType: FunctionUrlAuthType.NONE,

@@ -17,7 +17,6 @@ export type TransactionEntity = {
   name: string;
   pending: boolean;
   deleted?: boolean;
-  plaidTransactionId?: string;
   budgetCategoryId?: string | null;
 };
 
@@ -58,7 +57,6 @@ const hydrateTransaction = (
     ...transaction,
     amount: transaction.amount * -1,
     deleted: transaction.deleted ? true : false,
-    plaidTransactionId: transaction.plaidTransactionId ?? undefined,
     date: new Date(transaction.date),
     budgetCategoryId: transaction.budgetCategoryTransactionsId,
   };

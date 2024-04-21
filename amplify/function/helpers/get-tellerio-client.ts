@@ -26,8 +26,6 @@ export const listTransactions = async (accessKey: string) => {
   });
   const config = { auth: { username: accessKey }, httpsAgent: httpsAgent };
 
-  //curl https://api.teller.io/accounts/acc_oiin624kqjrg2mp2ea000/transactions \
-
   const axiosAccountsResponse = await axios.get(
     "https://api.teller.io/accounts",
     config as AxiosRequestConfig,
