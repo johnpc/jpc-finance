@@ -4,6 +4,7 @@ import { Schema } from "../../amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import { Subscription } from "rxjs";
 import { getCurrentUser } from "aws-amplify/auth";
+import { subMonths } from "date-fns";
 
 Amplify.configure(config);
 const client = generateClient<Schema>();
@@ -136,7 +137,9 @@ export const listBudgets = async (): Promise<BudgetEntity[]> => {
   return budgetEntities;
 };
 
-const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
+const createDefaultBudgetForDate = async (
+  date: Date,
+): Promise<BudgetEntity> => {
   const budgetMonth = date.toLocaleDateString(undefined, {
     month: "2-digit",
     year: "2-digit",
@@ -148,81 +151,105 @@ const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
     budgetBudgetCategoriesId: createdBudget.data.id,
     name: "Paycheck",
     type: "Income",
-    plannedAmount: 1000000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
-    name: "Vacation Fund",
+    name: "Investing",
     type: "Saving",
-    plannedAmount: 100000,
-  });
-  await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
-    name: "Investments",
-    type: "Saving",
-    plannedAmount: 200000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
     name: "Housing",
     type: "Needs",
-    plannedAmount: 300000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
     name: "Groceries",
     type: "Needs",
-    plannedAmount: 40000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
     name: "Transport",
     type: "Needs",
-    plannedAmount: 10000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
-    name: "Services",
+    name: "Entertainment",
     type: "Wants",
-    plannedAmount: 100000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
     name: "Dining Out",
     type: "Wants",
-    plannedAmount: 50000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
     name: "Shopping",
     type: "Wants",
-    plannedAmount: 50000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
-    name: "Movies",
+    name: "Misc",
     type: "Wants",
-    plannedAmount: 25000,
-  });
-  await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
-    name: "Golf",
-    type: "Wants",
-    plannedAmount: 25000,
-  });
-  await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
-    name: "Unexpected",
-    type: "Wants",
-    plannedAmount: 50000,
+    plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
     budgetBudgetCategoriesId: createdBudget.data.id,
     name: "Giving",
     type: "Wants",
-    plannedAmount: 50000,
+    plannedAmount: 0,
   });
   return hydrateBudget(createdBudget.data);
+};
+
+const copyBudgetForDate = async (
+  budget: BudgetEntity,
+  date: Date,
+): Promise<BudgetEntity> => {
+  const budgetMonth = date.toLocaleDateString(undefined, {
+    month: "2-digit",
+    year: "2-digit",
+  });
+  const createdBudget = await client.models.Budget.create({
+    budgetMonth,
+  });
+  const createBudgetCategoryPromises = budget.budgetCategories.map(
+    (budgetCategory) => {
+      return client.models.BudgetCategory.create({
+        budgetBudgetCategoriesId: createdBudget.data.id,
+        name: budgetCategory.name,
+        type: budgetCategory.type,
+        plannedAmount: budgetCategory.plannedAmount,
+      });
+    },
+  );
+  await Promise.all(createBudgetCategoryPromises);
+  return hydrateBudget(createdBudget.data);
+};
+
+const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
+  const lastMonth = subMonths(date, 1);
+  const lastBudgetMonth = lastMonth.toLocaleDateString(undefined, {
+    month: "2-digit",
+    year: "2-digit",
+  });
+  const allLastMonthBudgets = await client.models.Budget.listByBudgetMonth({
+    budgetMonth: lastBudgetMonth,
+  });
+  const budget = allLastMonthBudgets.data.find((b) => b);
+  if (!budget) {
+    return await createDefaultBudgetForDate(date);
+  }
+
+  return await copyBudgetForDate(await hydrateBudget(budget), date);
 };
 
 export const getBudgetForDate = async (date: Date): Promise<BudgetEntity> => {

@@ -43,7 +43,7 @@ export default function BudgetTable(props: {
     const plannedAmount = parseInt(plannedAmountString!);
     await updateBudgetCategory({
       ...budgetCategory,
-      plannedAmount: plannedAmount * 100 || budgetCategory.plannedAmount,
+      plannedAmount: (plannedAmount ?? 0) * 100,
     });
   };
   return (
