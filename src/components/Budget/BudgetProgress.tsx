@@ -1,10 +1,18 @@
-import { Card, Heading, Loader, Text, View } from "@aws-amplify/ui-react";
+import {
+  Card,
+  Heading,
+  Loader,
+  Text,
+  View,
+  useTheme,
+} from "@aws-amplify/ui-react";
 import { BudgetEntity, TransactionEntity } from "../../data/entity";
 
 export default function BudgetProgress(props: {
   budget: BudgetEntity;
   transactions: TransactionEntity[];
 }) {
+  const { tokens } = useTheme();
   const incomeCategory = props.budget.budgetCategories.find(
     (budgetCategory) => budgetCategory.type === "Income",
   )!;
@@ -51,6 +59,11 @@ export default function BudgetProgress(props: {
           </Text>
         </View>
         <Loader
+          filledColor={
+            transactionExpenseAmount > incomeAmount
+              ? tokens.colors.red[60]
+              : tokens.colors.green[60]
+          }
           variation="linear"
           percentage={(transactionExpenseAmount / incomeAmount) * 100}
           isDeterminate
