@@ -10,17 +10,29 @@ const schema = a.schema({
     })
     .secondaryIndexes((index) => [index("amplifyUserId")])
     .authorization([a.allow.owner(), a.allow.custom()]),
+  PlaidAuthorization: a
+    .model({
+      accessToken: a.string().required(),
+      userId: a.string().required(),
+      owner: a.string().required(),
+    })
+    .secondaryIndexes((index) => [index("userId")])
+    .authorization([a.allow.custom(), a.allow.owner()]),
   Account: a
     .model({
       name: a.string().required(),
       institutionName: a.string().required(),
       type: a.string().required(),
       subType: a.string().required(),
-      lastFour: a.integer().required(),
+      lastFour: a.integer(),
       tellerioAccountId: a.string(),
+      plaidAccountId: a.string(),
       owner: a.string().required(),
     })
-    .secondaryIndexes((index) => [index("tellerioAccountId")])
+    .secondaryIndexes((index) => [
+      index("tellerioAccountId"),
+      index("plaidAccountId"),
+    ])
     .authorization([a.allow.custom(), a.allow.owner()]),
   Transaction: a
     .model({
@@ -31,11 +43,13 @@ const schema = a.schema({
       pending: a.boolean().required(),
       deleted: a.boolean(),
       tellerioTransactionId: a.string(),
+      plaidTransactionId: a.string(),
       budgetCategory: a.belongsTo("BudgetCategory"),
       owner: a.string().required(),
     })
     .secondaryIndexes((index) => [
       index("transactionMonth"),
+      index("plaidTransactionId"),
       index("tellerioTransactionId"),
     ])
     .authorization([a.allow.custom(), a.allow.owner()]),

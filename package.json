@@ -27,9 +27,11 @@
     "aws-lambda": "^1.0.7",
     "axios": "^1.6.8",
     "date-fns": "^3.6.0",
+    "plaid": "^23.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.6",
+    "react-plaid-link": "^3.5.1",
     "teller-connect-react": "^0.1.0"
   },
   "devDependencies": {

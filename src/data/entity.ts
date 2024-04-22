@@ -26,7 +26,7 @@ export type AccountEntity = {
   institutionName: string;
   type: string;
   subType: string;
-  lastFour: number;
+  lastFour?: number | null;
   tellerioAccountId?: string;
 };
 

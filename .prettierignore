@@ -7,3 +7,4 @@ ios/
 *.avif
 .env*
 .husky
+apple-app-site-association

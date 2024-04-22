@@ -6,6 +6,9 @@ import { getCurrentUser } from "aws-amplify/auth";
 const client = generateClient<Schema>();
 export const syncTellerioTransactions = async () => {
   const accessTokenResponse = await client.models.TellerAuthorization.list();
+  if (!accessTokenResponse.data?.length) {
+    return;
+  }
   const accessToken = accessTokenResponse.data[0].accessToken;
   const owner = await getCurrentUser();
   const fetchResult = await fetch(

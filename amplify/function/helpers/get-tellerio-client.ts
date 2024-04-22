@@ -45,6 +45,8 @@ export const listTransactions = async (accessKey: string) => {
         config as AxiosRequestConfig,
       );
       console.log({ axiosResponse });
+      console.log({ data: axiosResponse.data });
+      console.log({ statusText: axiosResponse.statusText });
 
       return axiosResponse.data;
     },
