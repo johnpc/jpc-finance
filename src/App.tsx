@@ -4,6 +4,7 @@ import { Footer } from "./components/Footer";
 import { Link, withAuthenticator } from "@aws-amplify/ui-react";
 import { Capacitor } from "@capacitor/core";
 import TabsView from "./components/TabsView";
+
 function App() {
   return (
     <>

@@ -19,7 +19,7 @@ import {
   updateTransactionListener,
 } from "../data/entity";
 import { AuthUser, getCurrentUser } from "aws-amplify/auth";
-import { App } from "@capacitor/app";
+import { App, URLOpenListenerEvent } from "@capacitor/app";
 export default function TabsView() {
   const [toggleListeners, setToggleListeners] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
@@ -88,6 +88,12 @@ export default function TabsView() {
     App.addListener("appStateChange", async ({ isActive }) => {
       if (isActive) {
         setToggleListeners(!toggleListeners);
+      }
+    });
+    App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
+      const slug = event.url.split(".app").pop();
+      if (slug) {
+        console.log({ slug });
       }
     });
     return () => {

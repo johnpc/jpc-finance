@@ -1,14 +1,10 @@
 {
   "applinks": {
+    "apps": [],
     "details": [
       {
-        "appIDs": ["com.johncorser.finance"],
-        "components": [
-          {
-            "/": "/*",
-            "comment": "Matches any URL path"
-          }
-        ]
+        "appIDs": ["JW5SC3NYUV.com.johncorser.finance"],
+        "paths": ["*"]
       }
     ]
   },
