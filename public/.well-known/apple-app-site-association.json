@@ -13,6 +13,6 @@
     ]
   },
   "webcredentials": {
-	"apps": [ "com.johncorser.finance" ]
- }
+    "apps": ["com.johncorser.finance"]
+  }
 }
