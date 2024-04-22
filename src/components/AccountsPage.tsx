@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTellerConnect } from "teller-connect-react";
 import { AuthUser } from "aws-amplify/auth";
-import { Button, Divider } from "@aws-amplify/ui-react";
+import { Button, Divider, Text, useTheme } from "@aws-amplify/ui-react";
 import { Capacitor } from "@capacitor/core";
 import Transactions from "./Transactions/Transactions";
 import {
@@ -16,7 +16,9 @@ export default function AccountsPage(props: {
   transactions: TransactionEntity[];
   accounts: AccountEntity[];
 }) {
+  const { tokens } = useTheme();
   const [syncing, setSyncing] = useState(false);
+  const [error, setError] = useState(false);
   const { open, ready } = useTellerConnect({
     applicationId: "app_otq7p1qk69rkla3vmq000",
     onSuccess: async (authorization) => {
@@ -32,8 +34,14 @@ export default function AccountsPage(props: {
   };
 
   const syncAllTransactions = async () => {
+    setError(false);
     setSyncing(true);
-    await syncTellerioTransactions();
+    try {
+      await syncTellerioTransactions();
+    } catch (e) {
+      console.error(e);
+      setError(true);
+    }
     setSyncing(false);
   };
 
@@ -43,6 +51,9 @@ export default function AccountsPage(props: {
 
   return (
     <>
+      {error ? (
+        <Text color={tokens.colors.red[20]}>Sync error occurred.</Text>
+      ) : null}
       {syncing || props.accounts.length ? (
         <Button
           isFullWidth={true}
