@@ -9,14 +9,16 @@ export const syncTellerioTransactions = async () => {
   if (!accessTokenResponse.data?.length) {
     return;
   }
-  const accessToken = accessTokenResponse.data[0].accessToken;
+  const accessTokens = accessTokenResponse.data?.map(
+    (tellerAuthorization) => tellerAuthorization.accessToken,
+  );
   const owner = await getCurrentUser();
   const fetchResult = await fetch(
     config.custom.tellerioListTransactionsFunction,
     {
       method: "POST",
       body: JSON.stringify({
-        accessToken,
+        accessTokens,
         owner: owner.userId,
       }),
     },

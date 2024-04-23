@@ -98,27 +98,34 @@ const syncAccounts = async (plaidAccounts: AccountBase[], owner: string) => {
 export const handler = async (event: LambdaFunctionURLEvent) => {
   console.log({ event });
   const bodyJson = JSON.parse(event.body ?? "{}");
-  const accessToken = bodyJson.accessToken;
+  const accessTokens = bodyJson.accessTokens;
   const owner = bodyJson.owner;
-
   const date = new Date();
   const lastMonth = endOfMonth(subMonths(date, 1));
-  const transactionsResponse = await plaidClient.transactionsGet({
-    access_token: accessToken,
-    start_date: dateToString(lastMonth),
-    end_date: dateToString(date),
+
+  const aggregatedAccounts = [] as AccountBase[][];
+  const aggregatedTransactions = [] as PlaidTransaction[][];
+  const promises = accessTokens.map(async (accessToken: string) => {
+    const transactionsResponse = await plaidClient.transactionsGet({
+      access_token: accessToken,
+      start_date: dateToString(lastMonth),
+      end_date: dateToString(date),
+    });
+    const balanceResponse = await plaidClient.accountsBalanceGet({
+      access_token: accessToken,
+    });
+    await syncTransactions(transactionsResponse.data.transactions, owner);
+    aggregatedTransactions.push(transactionsResponse.data.transactions);
+    await syncAccounts(balanceResponse.data.accounts, owner);
+    aggregatedAccounts.push(balanceResponse.data.accounts);
   });
-  const balanceResponse = await plaidClient.accountsBalanceGet({
-    access_token: accessToken,
-  });
-  await syncTransactions(transactionsResponse.data.transactions, owner);
-  await syncAccounts(balanceResponse.data.accounts, owner);
+  await Promise.all(promises);
 
   return {
     statusCode: 200,
     body: JSON.stringify({
-      transactions: transactionsResponse.data,
-      balance: balanceResponse.data,
+      transactions: aggregatedAccounts,
+      accounts: aggregatedAccounts,
       message: "success!",
     }),
   };

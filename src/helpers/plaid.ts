@@ -49,11 +49,13 @@ export const syncPlaidTransactions = async () => {
     return;
   }
 
-  const accessToken = accessTokenResponse.data[0].accessToken;
+  const accessTokens = accessTokenResponse.data?.map(
+    (plaidAuthorization) => plaidAuthorization.accessToken,
+  );
   const response = await fetch(config.custom.plaidGetBalanceFunction, {
     method: "POST",
     body: JSON.stringify({
-      accessToken,
+      accessTokens,
       owner: user.userId,
     }),
   });

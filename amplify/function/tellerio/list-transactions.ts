@@ -1,6 +1,7 @@
 import { LambdaFunctionURLEvent } from "aws-lambda";
 import { listTransactions } from "../helpers/get-tellerio-client";
 import { client } from "../helpers/get-amplify-client";
+import { Schema } from "../../data/resource";
 
 type TellerIoTransaction = {
   id: string;
@@ -107,17 +108,25 @@ const syncTransactions = async (
 export const handler = async (event: LambdaFunctionURLEvent) => {
   console.log({ event });
   const bodyJson = JSON.parse(event.body ?? "{}");
-  const accessToken = bodyJson.accessToken;
+  const accessTokens = bodyJson.accessTokens;
   const owner = bodyJson.owner;
 
-  const { accounts, transactions } = await listTransactions(accessToken);
-  const amplifyAccounts = await syncAccounts(accounts, owner);
-  const amplifyTransactions = await syncTransactions(transactions, owner);
+  const aggregatedAccounts = [] as Schema["Account"][][];
+  const aggregatedTransactions = [] as Schema["Transaction"][][];
+  const promises = accessTokens.map(async (accessToken: string) => {
+    const { accounts, transactions } = await listTransactions(accessToken);
+    const amplifyAccounts = await syncAccounts(accounts, owner);
+    aggregatedAccounts.push(amplifyAccounts);
+    const amplifyTransactions = await syncTransactions(transactions, owner);
+    aggregatedTransactions.push(amplifyTransactions as Schema["Transaction"][]);
+  });
+  await Promise.all(promises);
+
   return {
     statusCode: 200,
     body: JSON.stringify({
-      accounts: amplifyAccounts,
-      transactions: amplifyTransactions,
+      accounts: aggregatedAccounts.flat(),
+      transactions: aggregatedTransactions.flat(),
       message: "success!",
     }),
   };
