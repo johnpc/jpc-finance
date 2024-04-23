@@ -6,12 +6,9 @@ import {
   View,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { BudgetEntity, TransactionEntity } from "../../data/entity";
+import { BudgetEntity } from "../../data/entity";
 
-export default function BudgetProgress(props: {
-  budget: BudgetEntity;
-  transactions: TransactionEntity[];
-}) {
+export default function BudgetProgress(props: { budget: BudgetEntity }) {
   const { tokens } = useTheme();
   const incomeCategory = props.budget.budgetCategories.find(
     (budgetCategory) => budgetCategory.type === "Income",
@@ -22,17 +19,17 @@ export default function BudgetProgress(props: {
     .filter((budgetCategory) => budgetCategory.type !== "Income")
     .reduce((acc, expenseCategory) => expenseCategory.plannedAmount + acc, 0);
 
-  const transactionExpenseAmount = props.transactions.reduce(
-    (acc, transaction) => {
-      if (
-        !transaction.budgetCategoryId ||
-        transaction.budgetCategoryId === incomeCategory.id
-      )
-        return acc;
-      return transaction.amount + acc;
-    },
-    0,
-  );
+  const transactionExpenseAmount = props.budget.budgetCategories
+    .filter((budgetCategory) => budgetCategory.type !== "Income")
+    .reduce(
+      (acc, expenseCategory) =>
+        expenseCategory.transactions.reduce(
+          (sum, transaction) => sum + transaction.amount,
+          0,
+        ) + acc,
+      0,
+    );
+
   const isBalanced = incomeAmount === expenseAmount;
   return (
     <>
