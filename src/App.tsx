@@ -1,7 +1,14 @@
 import "@aws-amplify/ui-react/styles.css";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
-import { Link, withAuthenticator } from "@aws-amplify/ui-react";
+import {
+  Heading,
+  Image,
+  Link,
+  View,
+  useTheme,
+  withAuthenticator,
+} from "@aws-amplify/ui-react";
 import { Capacitor } from "@capacitor/core";
 import TabsView from "./components/TabsView";
 
@@ -18,6 +25,20 @@ function App() {
 // eslint-disable-next-line react-refresh/only-export-components
 export default withAuthenticator(App, {
   components: {
+    Header() {
+      const { tokens } = useTheme();
+      return (
+        <View textAlign="center" backgroundColor={'#7FFFD4'} padding={'15px'}>
+        <Image
+          alt="logo"
+          borderRadius={tokens.radii.xl}
+          width={"100px"}
+          src="/maskable.png"
+        />
+        <Heading fontSize={tokens.fontSizes.xl} color={tokens.colors.primary[90]}>jpc.finance</Heading>
+      </View>
+      );
+    },
     Footer: () => (
       <div
         style={{
@@ -26,7 +47,7 @@ export default withAuthenticator(App, {
       >
         {Capacitor.getPlatform() === "ios" ? null : (
           <Link
-            href="https://apps.apple.com/us/app/jpc-fit/id6482482386"
+            href="https://testflight.apple.com/join/cViA1MLc"
             style={{
               color: "white",
             }}
