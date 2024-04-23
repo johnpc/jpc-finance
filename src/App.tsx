@@ -28,15 +28,20 @@ export default withAuthenticator(App, {
     Header() {
       const { tokens } = useTheme();
       return (
-        <View textAlign="center" backgroundColor={'#7FFFD4'} padding={'15px'}>
-        <Image
-          alt="logo"
-          borderRadius={tokens.radii.xl}
-          width={"100px"}
-          src="/maskable.png"
-        />
-        <Heading fontSize={tokens.fontSizes.xl} color={tokens.colors.primary[90]}>jpc.finance</Heading>
-      </View>
+        <View textAlign="center" backgroundColor={"#7FFFD4"} padding={"15px"}>
+          <Image
+            alt="logo"
+            borderRadius={tokens.radii.xl}
+            width={"100px"}
+            src="/maskable.png"
+          />
+          <Heading
+            fontSize={tokens.fontSizes.xl}
+            color={tokens.colors.primary[90]}
+          >
+            jpc.finance
+          </Heading>
+        </View>
       );
     },
     Footer: () => (

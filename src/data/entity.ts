@@ -84,7 +84,7 @@ const hydrateBudget = async (
   budget: Schema["Budget"],
 ): Promise<BudgetEntity> => {
   const budgetCategories = await budget.budgetCategories({ limit: 10000 });
-  const promises = budgetCategories.data.map((budgetCategory) => {
+  const promises = (budgetCategories.data ?? []).map((budgetCategory) => {
     return hydrateBudgetCategory(
       budgetCategory as unknown as Schema["BudgetCategory"],
     );
@@ -284,7 +284,7 @@ export const updateBudgetCategory = async (
   await client.models.BudgetCategory.update({
     id: budgetCategory.id,
     name: budgetCategory.name,
-    plannedAmount: budgetCategory.plannedAmount,
+    plannedAmount: budgetCategory.plannedAmount || 0,
   });
 };
 
