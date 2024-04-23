@@ -48,10 +48,14 @@ export default function BudgetTable(props: {
 
   const updatePlannedAmount = async (budgetCategory: BudgetCategoryEntity) => {
     const plannedAmountString = prompt("New amount?");
+    if (!plannedAmountString) {
+      return;
+    }
     const plannedAmount = parseInt(plannedAmountString!);
     await updateBudgetCategory({
       ...budgetCategory,
-      plannedAmount: (plannedAmount ?? 0) * 100,
+      plannedAmount:
+        (plannedAmount ?? budgetCategory.plannedAmount / 100) * 100,
     });
   };
 
@@ -66,12 +70,8 @@ export default function BudgetTable(props: {
           (budgetCategory) => budgetCategory.type === section.title,
         );
         return (
-          <Fragment>
-            <Table
-              highlightOnHover={false}
-              caption={section.title}
-              key={section.title}
-            >
+          <Fragment key={section.title}>
+            <Table highlightOnHover={false} caption={section.title}>
               <TableHead>
                 <TableRow>
                   <TableCell as="th">Name</TableCell>

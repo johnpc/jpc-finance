@@ -113,9 +113,12 @@ export const listTransactions = async (
     year: "2-digit",
   });
   const allTransactions =
-    await client.models.Transaction.listByTransactionMonth({
-      transactionMonth,
-    });
+    await client.models.Transaction.listByTransactionMonth(
+      {
+        transactionMonth,
+      },
+      { limit: 10000 },
+    );
   return allTransactions.data
     .map((transaction: Schema["Transaction"]) =>
       hydrateTransaction(transaction),

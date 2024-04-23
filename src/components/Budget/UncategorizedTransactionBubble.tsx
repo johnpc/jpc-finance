@@ -33,7 +33,7 @@ export default function UncategorizedTransactionBubble(props: {
         onClick={handleClickOpen}
       >
         {props.transaction.name}&nbsp;-&nbsp;$
-        {(props.transaction.amount / 100).toFixed(2)}
+        {(Math.abs(props.transaction.amount) / 100).toFixed(2)}
       </Badge>
       <CategorizeTransactionDialog
         open={open}
