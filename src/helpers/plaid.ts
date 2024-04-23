@@ -52,7 +52,7 @@ export const syncPlaidTransactions = async () => {
   const accessTokens = accessTokenResponse.data?.map(
     (plaidAuthorization) => plaidAuthorization.accessToken,
   );
-  const response = await fetch(config.custom.plaidGetBalanceFunction, {
+  const response = await fetch(config.custom.plaidListTransactionsFunction, {
     method: "POST",
     body: JSON.stringify({
       accessTokens,

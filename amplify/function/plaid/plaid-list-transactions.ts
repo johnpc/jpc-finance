@@ -111,13 +111,13 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
       start_date: dateToString(lastMonth),
       end_date: dateToString(date),
     });
-    const balanceResponse = await plaidClient.accountsBalanceGet({
-      access_token: accessToken,
-    });
+    console.log({ transactionsResponse });
+    console.log({ transactionsResponseData: transactionsResponse.data });
+
     await syncTransactions(transactionsResponse.data.transactions, owner);
     aggregatedTransactions.push(transactionsResponse.data.transactions);
-    await syncAccounts(balanceResponse.data.accounts, owner);
-    aggregatedAccounts.push(balanceResponse.data.accounts);
+    await syncAccounts(transactionsResponse.data.accounts, owner);
+    aggregatedAccounts.push(transactionsResponse.data.accounts);
   });
   await Promise.all(promises);
 

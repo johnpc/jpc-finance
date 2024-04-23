@@ -15,14 +15,14 @@ const authFunction = defineFunction({
 });
 
 const plaidCreateLinkTokenFunction = defineFunction({
-  entry: "./function/plaid/create-link-token.ts",
+  entry: "./function/plaid/plaid-create-link-token.ts",
 });
 const plaidExchangePublicTokenFunction = defineFunction({
-  entry: "./function/plaid/exchange-public-token.ts",
+  entry: "./function/plaid/plaid-exchange-public-token.ts",
 });
-const plaidGetBalanceFunction = defineFunction({
-  entry: "./function/plaid/get-balance.ts",
-  timeoutSeconds: 30,
+const plaidListTransactionsFunction = defineFunction({
+  entry: "./function/plaid/plaid-list-transactions.ts",
+  timeoutSeconds: 300,
 });
 
 const backend = defineBackend({
@@ -31,7 +31,7 @@ const backend = defineBackend({
   tellerioListTransactionsFunction,
   plaidCreateLinkTokenFunction,
   plaidExchangePublicTokenFunction,
-  plaidGetBalanceFunction,
+  plaidListTransactionsFunction,
   auth,
   data: data(authFunction),
   storage,
@@ -50,7 +50,7 @@ const outputs = {} as { [key: string]: string };
   { name: "tellerioListTransactionsFunction" },
   { name: "plaidCreateLinkTokenFunction" },
   { name: "plaidExchangePublicTokenFunction" },
-  { name: "plaidGetBalanceFunction" },
+  { name: "plaidListTransactionsFunction" },
 ].forEach((functionInfo) => {
   const underlyingLambda =
     // eslint-disable-next-line

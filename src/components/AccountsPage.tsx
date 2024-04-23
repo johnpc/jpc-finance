@@ -49,8 +49,10 @@ export default function AccountsPage(props: {
     setError(false);
     setSyncing(true);
     try {
-      await syncTellerioTransactions();
-      await syncPlaidTransactions();
+      await Promise.all([
+        syncTellerioTransactions(),
+        syncPlaidTransactions(),
+      ]);
     } catch (e) {
       console.error(e);
       setError(true);

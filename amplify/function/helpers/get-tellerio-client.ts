@@ -1,7 +1,7 @@
 import https from "https";
 import axios, { AxiosRequestConfig } from "axios";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { env } from "$amplify/env/list-transactions";
+import { env } from "$amplify/env/tellerio-list-transactions";
 import { endOfMonth, subMonths } from "date-fns";
 
 const getS3Contents = async (key: string) => {
