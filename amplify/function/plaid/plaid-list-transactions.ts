@@ -29,7 +29,7 @@ const syncTransactions = async (
 ) => {
   const transactions = plaidTransactions.map(
     (plaidTransaction: PlaidTransaction) => ({
-      amount: Math.floor(plaidTransaction.amount * 100),
+      amount: Math.floor(plaidTransaction.amount * 100) * -1,
       transactionMonth: new Date(plaidTransaction.date).toLocaleDateString(
         undefined,
         { month: "2-digit", year: "2-digit" },
