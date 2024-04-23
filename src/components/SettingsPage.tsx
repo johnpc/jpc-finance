@@ -1,8 +1,18 @@
-import { AccountSettings, Button, Card, Divider } from "@aws-amplify/ui-react";
+import {
+  AccountSettings,
+  Button,
+  Card,
+  Divider,
+  Heading,
+} from "@aws-amplify/ui-react";
 import SignOutButton from "./Settings/SignOutButton";
 import { BudgetEntity, updateTransaction } from "../data/entity";
+import { AuthUser } from "aws-amplify/auth";
 
-export default function SettingsPage(props: { budget: BudgetEntity }) {
+export default function SettingsPage(props: {
+  budget: BudgetEntity;
+  user: AuthUser;
+}) {
   const handleSuccess = () => {
     alert("success!");
   };
@@ -20,6 +30,7 @@ export default function SettingsPage(props: { budget: BudgetEntity }) {
 
   return (
     <Card>
+      <Heading>{props.user.signInDetails?.loginId}</Heading>
       <AccountSettings.ChangePassword onSuccess={handleSuccess} />
       <Divider style={{ margin: "20px" }} />
       <SignOutButton />

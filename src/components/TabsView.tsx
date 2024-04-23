@@ -134,7 +134,7 @@ export default function TabsView() {
           {
             label: "Settings",
             value: "Settings",
-            content: <SettingsPage budget={budget} />,
+            content: <SettingsPage user={user} budget={budget} />,
           },
         ]}
       />
