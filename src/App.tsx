@@ -52,7 +52,7 @@ export default withAuthenticator(App, {
       >
         {Capacitor.getPlatform() === "ios" ? null : (
           <Link
-            href="https://testflight.apple.com/join/cViA1MLc"
+            href="https://apps.apple.com/us/app/jpc-finance/id6499078837"
             style={{
               color: "white",
             }}
