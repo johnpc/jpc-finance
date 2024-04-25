@@ -1,4 +1,5 @@
 import {
+  AccountEntity,
   BudgetCategoryEntity,
   BudgetEntity,
   TransactionEntity,
@@ -8,10 +9,12 @@ import BudgetProgress from "./Budget/BudgetProgress";
 import BudgetTable from "./Budget/BudgetTable";
 import { useEffect, useState } from "react";
 import BudgetCategoryDetail from "./Budget/BudgetCategoryDetail";
+import SyncTransactionsButton from "./Budget/SyncTransactionsButton";
 
 export default function BudgetPage(props: {
   budget: BudgetEntity;
   transactions: TransactionEntity[];
+  accounts: AccountEntity[];
 }) {
   const [selectedCategory, setSelectedCategory] =
     useState<BudgetCategoryEntity>();
@@ -36,6 +39,7 @@ export default function BudgetPage(props: {
         </>
       ) : (
         <>
+          <SyncTransactionsButton />
           <BudgetProgress {...props} />
           <BudgetTable
             {...props}

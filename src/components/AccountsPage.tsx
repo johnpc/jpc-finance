@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTellerConnect } from "teller-connect-react";
 import { AuthUser } from "aws-amplify/auth";
-import { Button, Divider, Text, useTheme } from "@aws-amplify/ui-react";
+import { Button, Divider, Loader } from "@aws-amplify/ui-react";
 import { Capacitor } from "@capacitor/core";
 import Transactions from "./Transactions/Transactions";
 import {
@@ -9,31 +9,27 @@ import {
   TransactionEntity,
   createTellerAuthorization,
 } from "../data/entity";
-import { syncTellerioTransactions } from "../helpers/sync-tellerio-transactions";
 import Accounts from "./Accounts/Accounts";
-import {
-  createLinkToken,
-  exchangePublicToken,
-  syncPlaidTransactions,
-} from "../helpers/plaid";
+import { createLinkToken, exchangePublicToken } from "../helpers/plaid";
 import { usePlaidLink } from "react-plaid-link";
+import { syncAllTransactions } from "../helpers/sync-all-transactions";
 
 export default function AccountsPage(props: {
   user: AuthUser;
   transactions: TransactionEntity[];
   accounts: AccountEntity[];
 }) {
-  const { tokens } = useTheme();
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState(false);
   const [plaidToken, setPlaidToken] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const { open, ready } = useTellerConnect({
     applicationId: "app_otq7p1qk69rkla3vmq000",
     onSuccess: async (authorization) => {
       // Save your access token here
       console.log({ authorization });
+      setSyncing(true);
       await createTellerAuthorization(authorization.accessToken);
       await syncAllTransactions();
+      setSyncing(false);
     },
   });
 
@@ -43,18 +39,6 @@ export default function AccountsPage(props: {
 
   const handleAddAccountViaPlaid = async () => {
     plaidLink.open();
-  };
-
-  const syncAllTransactions = async () => {
-    setError(false);
-    setSyncing(true);
-    try {
-      await Promise.all([syncTellerioTransactions(), syncPlaidTransactions()]);
-    } catch (e) {
-      console.error(e);
-      setError(true);
-    }
-    setSyncing(false);
   };
 
   const testFinanceKit = async () => {
@@ -100,20 +84,7 @@ export default function AccountsPage(props: {
 
   return (
     <>
-      {error ? (
-        <Text color={tokens.colors.red[20]}>Sync error occurred.</Text>
-      ) : null}
-      {syncing || props.accounts.length ? (
-        <Button
-          isFullWidth={true}
-          isLoading={syncing}
-          loadingText="Syncing"
-          variation="link"
-          onClick={() => syncAllTransactions()}
-        >
-          Sync Transactions Now
-        </Button>
-      ) : null}
+      {syncing ? <Loader variation="linear" /> : null}
       <Accounts accounts={props.accounts} />
       <Divider margin={"20px"} />
       <Button

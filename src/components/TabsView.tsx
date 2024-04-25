@@ -118,7 +118,13 @@ export default function TabsView() {
           {
             label: "Budget",
             value: "Budget",
-            content: <BudgetPage transactions={transactions} budget={budget} />,
+            content: (
+              <BudgetPage
+                accounts={accounts}
+                transactions={transactions}
+                budget={budget}
+              />
+            ),
           },
           {
             label: "Accounts",
