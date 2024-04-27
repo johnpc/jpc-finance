@@ -1,4 +1,4 @@
-import { Loader, Tabs } from "@aws-amplify/ui-react";
+import { Button, Loader, Tabs, Text } from "@aws-amplify/ui-react";
 import BudgetPage from "./BudgetPage";
 import AccountsPage from "./AccountsPage";
 import SettingsPage from "./SettingsPage";
@@ -20,44 +20,47 @@ import {
 } from "../data/entity";
 import { AuthUser, getCurrentUser } from "aws-amplify/auth";
 import { App, URLOpenListenerEvent } from "@capacitor/app";
+import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import { addMonths, subMonths } from "date-fns";
 export default function TabsView() {
   const [toggleListeners, setToggleListeners] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [budget, setBudget] = useState<BudgetEntity>();
   const [user, setUser] = useState<AuthUser>();
-
-  const setup = async () => {
-    const budget = await getBudgetForDate(new Date());
-    setBudget(budget);
-    const transactions = await listTransactions(new Date());
-    setTransactions(transactions);
-    const accounts = await listAccounts();
-    setAccounts(accounts);
-    const user = await getCurrentUser();
-    setUser(user);
-  };
+  const [date, setDate] = useState<Date>(new Date());
 
   useEffect(() => {
+    const setup = async () => {
+      const budget = await getBudgetForDate(date);
+      setBudget(budget);
+      const transactions = await listTransactions(date);
+      setTransactions(transactions);
+      const accounts = await listAccounts();
+      setAccounts(accounts);
+      const user = await getCurrentUser();
+      setUser(user);
+    };
+
     setup();
-  }, []);
+  }, [date]);
 
   useEffect(() => {
     const createBudgetCategorySubscription = createBudgetCategoryListener(
       async () => {
-        const budget = await getBudgetForDate(new Date());
+        const budget = await getBudgetForDate(date);
         setBudget(budget);
       },
     );
     const updateBudgetCategorySubscription = updateBudgetCategoryListener(
       async () => {
-        const budget = await getBudgetForDate(new Date());
+        const budget = await getBudgetForDate(date);
         setBudget(budget);
       },
     );
     const removeBudgetCategorySubscription = deleteBudgetCategoryListener(
       async () => {
-        const budget = await getBudgetForDate(new Date());
+        const budget = await getBudgetForDate(date);
         setBudget(budget);
       },
     );
@@ -81,7 +84,7 @@ export default function TabsView() {
         });
         setTransactions(updatedTransactions);
         // updating transaction budget category requires budget update
-        const budget = await getBudgetForDate(new Date());
+        const budget = await getBudgetForDate(date);
         setBudget(budget);
       },
     );
@@ -105,11 +108,50 @@ export default function TabsView() {
       unsubscribeListener(updateTransactionSubscription);
       App.removeAllListeners();
     };
-  }, [user, budget, transactions, accounts, toggleListeners]);
+  }, [date, user, budget, transactions, accounts, toggleListeners]);
+
+  const handleSubtractDate = async () => {
+    const day = subMonths(date, 1);
+    setDate(day);
+  };
+  const handleAddDate = async () => {
+    const day = addMonths(date, 1);
+    setDate(day);
+  };
 
   if (!budget || !user) return <Loader variation="linear" />;
+  const dateLocaleString = date.toLocaleString(undefined, {
+    month: "2-digit",
+    year: "2-digit",
+  });
+  const nowLocaleString = new Date().toLocaleString(undefined, {
+    month: "2-digit",
+    year: "2-digit",
+  });
+
   return (
     <>
+      <>
+        <Text as="div" textAlign={"center"}>
+          <ArrowBackIos
+            style={{ paddingTop: "10px" }}
+            onClick={handleSubtractDate}
+          />
+          <Text as="span" fontWeight={"bold"} margin={"15%"}>
+            {dateLocaleString}
+          </Text>
+          {dateLocaleString === nowLocaleString ? null : (
+            <ArrowForwardIos
+              style={{ paddingTop: "10px" }}
+              onClick={handleAddDate}
+            />
+          )}
+
+          {dateLocaleString === nowLocaleString ? null : (
+            <Button onClick={() => setDate(new Date())}>today</Button>
+          )}
+        </Text>
+      </>
       <Tabs
         spacing="equal"
         justifyContent="space-between"

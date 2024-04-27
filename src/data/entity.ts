@@ -4,7 +4,6 @@ import { Schema } from "../../amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import { Subscription } from "rxjs";
 import { getCurrentUser } from "aws-amplify/auth";
-import { subMonths } from "date-fns";
 
 Amplify.configure(config);
 const client = generateClient<Schema>();
@@ -237,15 +236,13 @@ const copyBudgetForDate = async (
 };
 
 const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
-  const lastMonth = subMonths(date, 1);
-  const lastBudgetMonth = lastMonth.toLocaleDateString(undefined, {
-    month: "2-digit",
-    year: "2-digit",
-  });
-  const allLastMonthBudgets = await client.models.Budget.listByBudgetMonth({
-    budgetMonth: lastBudgetMonth,
-  });
-  const budget = allLastMonthBudgets.data.find((b) => b);
+  const allBudgets = await client.models.Budget.list();
+  const budget = allBudgets.data
+    ?.sort(
+      (a: Schema["Budget"], b: Schema["Budget"]) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+    .find((b) => b);
   if (!budget) {
     return await createDefaultBudgetForDate(date);
   }
