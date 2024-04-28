@@ -165,6 +165,7 @@ export default function TabsView() {
                 accounts={accounts}
                 transactions={transactions}
                 budget={budget}
+                date={date}
               />
             ),
           },

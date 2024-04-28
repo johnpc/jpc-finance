@@ -4,7 +4,7 @@ import config from "../../amplifyconfiguration.json";
 import { getCurrentUser } from "aws-amplify/auth";
 
 const client = generateClient<Schema>();
-export const syncTellerioTransactions = async () => {
+export const syncTellerioTransactions = async (date: Date) => {
   const accessTokenResponse = await client.models.TellerAuthorization.list();
   if (!accessTokenResponse.data?.length) {
     return;
@@ -20,6 +20,7 @@ export const syncTellerioTransactions = async () => {
       body: JSON.stringify({
         accessTokens,
         owner: owner.userId,
+        date: date.toLocaleString(),
       }),
     },
   );

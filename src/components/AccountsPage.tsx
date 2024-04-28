@@ -28,7 +28,7 @@ export default function AccountsPage(props: {
       console.log({ authorization });
       setSyncing(true);
       await createTellerAuthorization(authorization.accessToken);
-      await syncAllTransactions();
+      await syncAllTransactions(new Date());
       setSyncing(false);
     },
   });

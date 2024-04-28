@@ -15,6 +15,7 @@ export default function BudgetPage(props: {
   budget: BudgetEntity;
   transactions: TransactionEntity[];
   accounts: AccountEntity[];
+  date: Date;
 }) {
   const [selectedCategory, setSelectedCategory] =
     useState<BudgetCategoryEntity>();
@@ -39,7 +40,7 @@ export default function BudgetPage(props: {
         </>
       ) : (
         <>
-          <SyncTransactionsButton />
+          <SyncTransactionsButton date={props.date} />
           <BudgetProgress {...props} />
           <BudgetTable
             {...props}

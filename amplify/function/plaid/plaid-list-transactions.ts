@@ -100,7 +100,7 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
   const bodyJson = JSON.parse(event.body ?? "{}");
   const accessTokens = bodyJson.accessTokens;
   const owner = bodyJson.owner;
-  const date = new Date();
+  const date = bodyJson.date ? new Date(bodyJson.date) : new Date();
   const lastMonth = endOfMonth(subMonths(date, 1));
 
   const aggregatedAccounts = [] as AccountBase[][];

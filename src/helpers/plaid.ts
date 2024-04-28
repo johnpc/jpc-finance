@@ -19,7 +19,7 @@ export const exchangePublicToken = async (
     },
   );
   const { accessToken } = await fetchResponse.json();
-  await syncPlaidTransactions();
+  await syncPlaidTransactions(new Date());
   return accessToken;
 };
 
@@ -41,7 +41,7 @@ export const createLinkToken = async (): Promise<string> => {
   return linkToken;
 };
 
-export const syncPlaidTransactions = async () => {
+export const syncPlaidTransactions = async (date: Date) => {
   const user = await getCurrentUser();
   const accessTokenResponse = await client.models.PlaidAuthorization.list();
   console.log({ accessTokenResponse });
@@ -50,13 +50,15 @@ export const syncPlaidTransactions = async () => {
   }
 
   const accessTokens = accessTokenResponse.data?.map(
-    (plaidAuthorization) => plaidAuthorization.accessToken,
+    (plaidAuthorization: Schema["PlaidAuthorization"]) =>
+      plaidAuthorization.accessToken,
   );
   const response = await fetch(config.custom.plaidListTransactionsFunction, {
     method: "POST",
     body: JSON.stringify({
       accessTokens,
       owner: user.userId,
+      date: date.toLocaleString(),
     }),
   });
   const json = await response.json();

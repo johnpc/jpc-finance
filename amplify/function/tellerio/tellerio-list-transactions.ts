@@ -110,11 +110,15 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
   const bodyJson = JSON.parse(event.body ?? "{}");
   const accessTokens = bodyJson.accessTokens;
   const owner = bodyJson.owner;
+  const date = bodyJson.date ? new Date(bodyJson.date) : new Date();
 
   const aggregatedAccounts = [] as Schema["Account"][][];
   const aggregatedTransactions = [] as Schema["Transaction"][][];
   const promises = accessTokens.map(async (accessToken: string) => {
-    const { accounts, transactions } = await listTransactions(accessToken);
+    const { accounts, transactions } = await listTransactions(
+      accessToken,
+      date,
+    );
     const amplifyAccounts = await syncAccounts(accounts, owner);
     aggregatedAccounts.push(amplifyAccounts);
     const amplifyTransactions = await syncTransactions(transactions, owner);

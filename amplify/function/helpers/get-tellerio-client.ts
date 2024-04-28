@@ -14,7 +14,7 @@ const getS3Contents = async (key: string) => {
   );
   return await s3Response.Body?.transformToString();
 };
-export const listTransactions = async (accessKey: string) => {
+export const listTransactions = async (accessKey: string, date: Date) => {
   const httpsAgent = new https.Agent({
     cert: await getS3Contents("internal/certificate.pem"),
     key: await getS3Contents("internal/private_key.pem"),
@@ -59,7 +59,7 @@ export const listTransactions = async (accessKey: string) => {
 
   const filteredTransactions = transactions.flat().filter((transaction) => {
     const transactionDate = new Date(transaction.date);
-    const endOfLastMonth = endOfMonth(subMonths(new Date(), 1));
+    const endOfLastMonth = endOfMonth(subMonths(date, 1));
     return transactionDate.getTime() > endOfLastMonth.getTime();
   });
 
