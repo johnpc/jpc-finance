@@ -1,5 +1,5 @@
 import { getCurrentUser } from "aws-amplify/auth";
-import config from "../../amplifyconfiguration.json";
+import config from "../../amplify_outputs.json";
 import { generateClient } from "aws-amplify/api";
 import { Schema } from "../../amplify/data/resource";
 const client = generateClient<Schema>();
@@ -50,7 +50,7 @@ export const syncPlaidTransactions = async (date: Date) => {
   }
 
   const accessTokens = accessTokenResponse.data?.map(
-    (plaidAuthorization: Schema["PlaidAuthorization"]) =>
+    (plaidAuthorization: Schema["PlaidAuthorization"]["type"]) =>
       plaidAuthorization.accessToken,
   );
   const response = await fetch(config.custom.plaidListTransactionsFunction, {

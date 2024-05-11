@@ -5,8 +5,8 @@ backend:
       commands:
         - npm ci --cache .npm --prefer-offline
         - export AWS_BRANCH_THAT_ACTUALLY_EXISTS=$(if [ -z "$AWS_PULL_REQUEST_ID" ]; then echo $AWS_BRANCH; else echo pr-$AWS_PULL_REQUEST_ID; fi)
-        - npx amplify generate config --branch $AWS_BRANCH_THAT_ACTUALLY_EXISTS --app-id $AWS_APP_ID || echo "{}" > amplifyconfiguration.json
-        - npx amplify pipeline-deploy --branch $AWS_BRANCH_THAT_ACTUALLY_EXISTS --app-id $AWS_APP_ID
+        - npx ampx generate outputs --branch $AWS_BRANCH_THAT_ACTUALLY_EXISTS --app-id $AWS_APP_ID || echo "{}" > amplify_outputs.json
+        - npx ampx pipeline-deploy --branch $AWS_BRANCH_THAT_ACTUALLY_EXISTS --app-id $AWS_APP_ID
 frontend:
   phases:
     build:

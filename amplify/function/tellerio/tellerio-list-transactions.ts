@@ -38,7 +38,7 @@ const syncAccounts = async (accounts: TellerIoAccount[], owner: string) => {
   const amplifyAccounts = [];
   for (const account of accounts) {
     const existingAccounts =
-      await client.models.Account.listByTellerioAccountId({
+      await client.models.Account.listAccountByTellerioAccountId({
         tellerioAccountId: account.id,
       });
 
@@ -54,7 +54,7 @@ const syncAccounts = async (accounts: TellerIoAccount[], owner: string) => {
         owner,
       });
       console.log({ created, errors: created.errors });
-      amplifyAccounts.push(created.data);
+      amplifyAccounts.push(created.data!);
     }
   }
 
@@ -84,7 +84,7 @@ const syncTransactions = async (
     }));
   for (const transaction of transactions) {
     const existingTransactions =
-      await client.models.Transaction.listByTellerioTransactionId({
+      await client.models.Transaction.listTransactionByTellerioTransactionId({
         tellerioTransactionId: transaction.tellerioTransactionId,
       });
     const existingTransaction = existingTransactions.data?.find((t) => t);
@@ -112,8 +112,8 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
   const owner = bodyJson.owner;
   const date = bodyJson.date ? new Date(bodyJson.date) : new Date();
 
-  const aggregatedAccounts = [] as Schema["Account"][][];
-  const aggregatedTransactions = [] as Schema["Transaction"][][];
+  const aggregatedAccounts = [] as Schema["Account"]["type"][][];
+  const aggregatedTransactions = [] as Schema["Transaction"]["type"][][];
   const promises = accessTokens.map(async (accessToken: string) => {
     const { accounts, transactions } = await listTransactions(
       accessToken,
@@ -122,7 +122,9 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
     const amplifyAccounts = await syncAccounts(accounts, owner);
     aggregatedAccounts.push(amplifyAccounts);
     const amplifyTransactions = await syncTransactions(transactions, owner);
-    aggregatedTransactions.push(amplifyTransactions as Schema["Transaction"][]);
+    aggregatedTransactions.push(
+      amplifyTransactions as Schema["Transaction"]["type"][],
+    );
   });
   await Promise.all(promises);
 

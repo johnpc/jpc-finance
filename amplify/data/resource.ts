@@ -9,7 +9,7 @@ const schema = a.schema({
       amplifyUserId: a.string().required(),
     })
     .secondaryIndexes((index) => [index("amplifyUserId")])
-    .authorization([a.allow.owner(), a.allow.custom()]),
+    .authorization((allow) => [allow.owner(), allow.custom()]),
   PlaidAuthorization: a
     .model({
       accessToken: a.string().required(),
@@ -17,7 +17,7 @@ const schema = a.schema({
       owner: a.string().required(),
     })
     .secondaryIndexes((index) => [index("userId")])
-    .authorization([a.allow.custom(), a.allow.owner()]),
+    .authorization((allow) => [allow.custom(), allow.owner()]),
   Account: a
     .model({
       name: a.string().required(),
@@ -33,7 +33,7 @@ const schema = a.schema({
       index("tellerioAccountId"),
       index("plaidAccountId"),
     ])
-    .authorization([a.allow.custom(), a.allow.owner()]),
+    .authorization((allow) => [allow.custom(), allow.owner()]),
   Transaction: a
     .model({
       amount: a.integer().required(),
@@ -44,31 +44,39 @@ const schema = a.schema({
       deleted: a.boolean(),
       tellerioTransactionId: a.string(),
       plaidTransactionId: a.string(),
-      budgetCategory: a.belongsTo("BudgetCategory"),
+      financeKitTransactionId: a.string(),
+      budgetCategoryTransactionsId: a.string(),
+      budgetCategory: a.belongsTo(
+        "BudgetCategory",
+        "budgetCategoryTransactionsId",
+      ),
       owner: a.string().required(),
     })
     .secondaryIndexes((index) => [
       index("transactionMonth"),
       index("plaidTransactionId"),
       index("tellerioTransactionId"),
+      index("financeKitTransactionId"),
     ])
-    .authorization([a.allow.custom(), a.allow.owner()]),
+    .authorization((allow) => [allow.custom(), allow.owner()]),
   Budget: a
     .model({
       budgetMonth: a.string().required(),
-      budgetCategories: a.hasMany("BudgetCategory"),
+      budgetCategories: a.hasMany("BudgetCategory", "budgetBudgetCategoriesId"),
     })
     .secondaryIndexes((index) => [index("budgetMonth")])
-    .authorization([a.allow.custom(), a.allow.owner()]),
+    .authorization((allow) => [allow.custom(), allow.owner()]),
   BudgetCategory: a
     .model({
-      budget: a.belongsTo("Budget"),
+      budget: a.belongsTo("Budget", "budgetBudgetCategoriesId"),
+      budgetBudgetCategoriesId: a.string(),
       name: a.string().required(),
       type: a.ref("BudgetCategoryType").required(),
-      transactions: a.hasMany("Transaction"),
+      transactions: a.hasMany("Transaction", "budgetCategoryTransactionsId"),
       plannedAmount: a.integer().required(),
     })
-    .authorization([a.allow.custom(), a.allow.owner()]),
+    .secondaryIndexes((index) => [index("budgetBudgetCategoriesId")])
+    .authorization((allow) => [allow.custom(), allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

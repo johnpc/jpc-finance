@@ -47,9 +47,11 @@ const syncTransactions = async (
 
   for (const transaction of transactions) {
     const existingTransactions =
-      await amplifyClient.models.Transaction.listByPlaidTransactionId({
-        plaidTransactionId: transaction.plaidTransactionId,
-      });
+      await amplifyClient.models.Transaction.listTransactionByPlaidTransactionId(
+        {
+          plaidTransactionId: transaction.plaidTransactionId,
+        },
+      );
     const existingTransaction = existingTransactions.data?.find((t) => t);
     if (existingTransaction) {
       const updated = await amplifyClient.models.Transaction.update({
@@ -73,7 +75,7 @@ const syncAccounts = async (plaidAccounts: AccountBase[], owner: string) => {
   const amplifyAccounts = [];
   for (const account of plaidAccounts) {
     const existingAccounts =
-      await amplifyClient.models.Account.listByPlaidAccountId({
+      await amplifyClient.models.Account.listAccountByPlaidAccountId({
         plaidAccountId: account.account_id,
       });
 

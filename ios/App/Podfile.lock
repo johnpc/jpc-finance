@@ -1,10 +1,10 @@
 PODS:
-  - Capacitor (5.7.4):
+  - Capacitor (5.7.5):
     - CapacitorCordova
   - CapacitorApp (5.0.7):
     - Capacitor
-  - CapacitorCordova (5.7.4)
-  - JohnpcFinancekitCapacitor (0.0.1):
+  - CapacitorCordova (5.7.5)
+  - JohnpcFinancekitCapacitor (0.0.2):
     - Capacitor
 
 DEPENDENCIES:
@@ -24,10 +24,10 @@ EXTERNAL SOURCES:
     :path: "../../../financekit-capacitor-plugin/financekit-capacitor"
 
 SPEC CHECKSUMS:
-  Capacitor: 4fe9adf012caceb4c71ffea2f1f4d005cdcbeea7
+  Capacitor: 7d42085cb786b2d3ea9ac8a17ebd7e3305be7b72
   CapacitorApp: 17fecd0e6cb23feafac7eb0939417389038b0979
-  CapacitorCordova: a6e87fccc0307dee7aec1560ec9398485f2b0ce7
-  JohnpcFinancekitCapacitor: 3c51e1461d6c97eaf4c274b05da0a1f7603d43e6
+  CapacitorCordova: c946a6052b547e1e185fc46862003f7b9130ead1
+  JohnpcFinancekitCapacitor: 0b59e0f225d8bfc4091d3158a2a446258ba2b626
 
 PODFILE CHECKSUM: 2e141fd7ff259a93d1b05352f1e76e17bf8677ab
 

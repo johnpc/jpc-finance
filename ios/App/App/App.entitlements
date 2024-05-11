@@ -7,5 +7,9 @@
 		<string>webcredentials:finance.jpc.io</string>
 		<string>applinks:finance.jpc.io</string>
 	</array>
+	<key>com.apple.developer.financekit</key>
+	<array>
+		<string>financial-data</string>
+	</array>
 </dict>
 </plist>

@@ -1,6 +1,6 @@
 import { generateClient } from "aws-amplify/api";
 import { Schema } from "../../amplify/data/resource";
-import config from "../../amplifyconfiguration.json";
+import config from "../../amplify_outputs.json";
 import { getCurrentUser } from "aws-amplify/auth";
 
 const client = generateClient<Schema>();

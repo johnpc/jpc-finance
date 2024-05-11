@@ -9,7 +9,7 @@ const getS3Contents = async (key: string) => {
   const s3Response = await s3Client.send(
     new GetObjectCommand({
       Key: key,
-      Bucket: env.jpcFinanceResources_BUCKET_NAME,
+      Bucket: env.JPC_FINANCE_RESOURCES_BUCKET_NAME,
     }),
   );
   return await s3Response.Body?.transformToString();

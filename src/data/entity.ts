@@ -1,5 +1,5 @@
 import { generateClient } from "aws-amplify/api";
-import config from "../../amplifyconfiguration.json";
+import config from "../../amplify_outputs.json";
 import { Schema } from "../../amplify/data/resource";
 import { Amplify } from "aws-amplify";
 import { Subscription } from "rxjs";
@@ -43,14 +43,14 @@ export type BudgetEntity = {
   budgetCategories: BudgetCategoryEntity[];
 };
 
-const hydrateAccount = (account: Schema["Account"]): AccountEntity => {
+const hydrateAccount = (account: Schema["Account"]["type"]): AccountEntity => {
   return {
     ...account,
     tellerioAccountId: account.id,
   };
 };
 const hydrateTransaction = (
-  transaction: Schema["Transaction"],
+  transaction: Schema["Transaction"]["type"],
 ): TransactionEntity => {
   return {
     ...transaction,
@@ -62,11 +62,12 @@ const hydrateTransaction = (
 };
 
 const hydrateBudgetCategory = async (
-  budgetCategory: Schema["BudgetCategory"],
+  budgetCategory: Schema["BudgetCategory"]["type"],
 ): Promise<BudgetCategoryEntity> => {
   const transactions = await budgetCategory.transactions({ limit: 10000 });
-  const transactionEntities = transactions.data.map((transaction) =>
-    hydrateTransaction(transaction),
+  const transactionEntities = transactions.data.map(
+    (transaction: Schema["Transaction"]["type"]) =>
+      hydrateTransaction(transaction),
   );
   return {
     ...budgetCategory,
@@ -80,12 +81,15 @@ const hydrateBudgetCategory = async (
 };
 
 const hydrateBudget = async (
-  budget: Schema["Budget"],
+  budget: Schema["Budget"]["type"],
 ): Promise<BudgetEntity> => {
   const budgetCategories = await budget.budgetCategories({ limit: 10000 });
-  const promises = (budgetCategories.data ?? []).map((budgetCategory) => {
+  const promises = (
+    (budgetCategories.data as unknown as Schema["BudgetCategory"]["type"][]) ??
+    []
+  ).map((budgetCategory: Schema["BudgetCategory"]["type"]) => {
     return hydrateBudgetCategory(
-      budgetCategory as unknown as Schema["BudgetCategory"],
+      budgetCategory as unknown as Schema["BudgetCategory"]["type"],
     );
   });
   const budgetCategoryEntities = await Promise.all(promises);
@@ -98,7 +102,7 @@ const hydrateBudget = async (
 export const listAccounts = async (): Promise<AccountEntity[]> => {
   const allAccounts = await client.models.Account.list();
   return (
-    allAccounts.data?.map((account: Schema["Account"]) =>
+    allAccounts.data?.map((account: Schema["Account"]["type"]) =>
       hydrateAccount(account),
     ) ?? []
   );
@@ -112,14 +116,14 @@ export const listTransactions = async (
     year: "2-digit",
   });
   const allTransactions =
-    await client.models.Transaction.listByTransactionMonth(
+    await client.models.Transaction.listTransactionByTransactionMonth(
       {
         transactionMonth,
       },
       { limit: 10000 },
     );
   return allTransactions.data
-    .map((transaction: Schema["Transaction"]) =>
+    .map((transaction: Schema["Transaction"]["type"]) =>
       hydrateTransaction(transaction),
     )
     .sort(
@@ -130,7 +134,7 @@ export const listTransactions = async (
 
 export const listBudgets = async (): Promise<BudgetEntity[]> => {
   const allBudgets = await client.models.Budget.list();
-  const promises = allBudgets.data.map((budget: Schema["Budget"]) =>
+  const promises = allBudgets.data.map((budget: Schema["Budget"]["type"]) =>
     hydrateBudget(budget),
   );
   const budgetEntities = await Promise.all(promises);
@@ -148,66 +152,66 @@ const createDefaultBudgetForDate = async (
     budgetMonth,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Paycheck",
     type: "Income",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Investing",
     type: "Saving",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Housing",
     type: "Needs",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Groceries",
     type: "Needs",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Transport",
     type: "Needs",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Entertainment",
     type: "Wants",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Dining Out",
     type: "Wants",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Shopping",
     type: "Wants",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Misc",
     type: "Wants",
     plannedAmount: 0,
   });
   await client.models.BudgetCategory.create({
-    budgetBudgetCategoriesId: createdBudget.data.id,
+    budgetBudgetCategoriesId: createdBudget.data!.id,
     name: "Giving",
     type: "Wants",
     plannedAmount: 0,
   });
-  return hydrateBudget(createdBudget.data);
+  return hydrateBudget(createdBudget.data!);
 };
 
 const copyBudgetForDate = async (
@@ -224,7 +228,7 @@ const copyBudgetForDate = async (
   const createBudgetCategoryPromises = budget.budgetCategories.map(
     (budgetCategory) => {
       return client.models.BudgetCategory.create({
-        budgetBudgetCategoriesId: createdBudget.data.id,
+        budgetBudgetCategoriesId: createdBudget.data!.id,
         name: budgetCategory.name,
         type: budgetCategory.type,
         plannedAmount: budgetCategory.plannedAmount,
@@ -232,14 +236,14 @@ const copyBudgetForDate = async (
     },
   );
   await Promise.all(createBudgetCategoryPromises);
-  return hydrateBudget(createdBudget.data);
+  return hydrateBudget(createdBudget.data!);
 };
 
 const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
   const allBudgets = await client.models.Budget.list();
   const budget = allBudgets.data
     ?.sort(
-      (a: Schema["Budget"], b: Schema["Budget"]) =>
+      (a: Schema["Budget"]["type"], b: Schema["Budget"]["type"]) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
     .find((b) => b);
@@ -255,10 +259,10 @@ export const getBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
     month: "2-digit",
     year: "2-digit",
   });
-  const allBudgets = await client.models.Budget.listByBudgetMonth({
+  const allBudgets = await client.models.Budget.listBudgetByBudgetMonth({
     budgetMonth,
   });
-  const budget = allBudgets.data.find((b) => b);
+  const budget = allBudgets.data.find((b: Schema["Budget"]["type"]) => b);
   if (!budget) {
     return await createBudgetForDate(date);
   }
@@ -346,7 +350,7 @@ export const deleteBudgetCategoryListener = (fn: () => void) => {
 
 export const createAccountListener = (fn: (account: AccountEntity) => void) => {
   const listener = client.models.Account.onCreate().subscribe({
-    next: async (account: Schema["Account"]) => {
+    next: async (account: Schema["Account"]["type"]) => {
       fn(hydrateAccount(account));
     },
     error: (error: Error) => {
@@ -360,7 +364,7 @@ export const createTransactionListener = (
   fn: (transaction: TransactionEntity) => void,
 ) => {
   const listener = client.models.Transaction.onCreate().subscribe({
-    next: async (transaction: Schema["Transaction"]) => {
+    next: async (transaction: Schema["Transaction"]["type"]) => {
       fn(hydrateTransaction(transaction));
     },
     error: (error: Error) => {
@@ -374,7 +378,7 @@ export const updateTransactionListener = (
   fn: (transaction: TransactionEntity) => void,
 ) => {
   const listener = client.models.Transaction.onUpdate().subscribe({
-    next: async (transaction: Schema["Transaction"]) => {
+    next: async (transaction: Schema["Transaction"]["type"]) => {
       fn(hydrateTransaction(transaction));
     },
     error: (error: Error) => {

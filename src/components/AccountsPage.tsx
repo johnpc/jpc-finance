@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useTellerConnect } from "teller-connect-react";
 import { AuthUser } from "aws-amplify/auth";
 import { Button, Divider, Loader } from "@aws-amplify/ui-react";
-import { Capacitor } from "@capacitor/core";
 import Transactions from "./Transactions/Transactions";
 import {
   AccountEntity,
@@ -13,6 +12,8 @@ import Accounts from "./Accounts/Accounts";
 import { createLinkToken, exchangePublicToken } from "../helpers/plaid";
 import { usePlaidLink } from "react-plaid-link";
 import { syncAllTransactions } from "../helpers/sync-all-transactions";
+import { JPCFinanceKit } from "@johnpc/financekit-capacitor";
+import { Capacitor } from "@capacitor/core";
 
 export default function AccountsPage(props: {
   user: AuthUser;
@@ -41,8 +42,13 @@ export default function AccountsPage(props: {
     plaidLink.open();
   };
 
-  const testFinanceKit = async () => {
-    console.log("TODO: Add FinanceKit support");
+  const handleAddAccountViaFinanceKit = async () => {
+    const auth = await JPCFinanceKit.requestAuthorization();
+    console.log({auth});
+    // const accounts = await JPCFinanceKit.accounts();
+    // console.log({accounts});
+    // const transactions = await JPCFinanceKit.transactions();
+    // console.log({transactions});
   };
 
   let isOauth = false;
@@ -105,14 +111,12 @@ export default function AccountsPage(props: {
       >
         Link Account via Plaid
       </Button>
-      {Capacitor.getPlatform() !== "TODO: Add FinanceKit" ? null : (
-        <>
+      {Capacitor.getPlatform() !== "ios" ? null : ( <>
           <Divider margin={"20px"} />
-          <Button onClick={testFinanceKit} isFullWidth={true}>
+          <Button onClick={handleAddAccountViaFinanceKit} isFullWidth={true}>
             Link FinanceKit
           </Button>
-        </>
-      )}
+        </>)}
       <Divider margin={"20px"} />
       <Transactions transactions={props.transactions} />
     </>
