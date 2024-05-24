@@ -6,12 +6,17 @@ import {
   Heading,
 } from "@aws-amplify/ui-react";
 import SignOutButton from "./Settings/SignOutButton";
-import { BudgetEntity, updateTransaction } from "../data/entity";
+import {
+  BudgetEntity,
+  SettingsEntity,
+  updateTransaction,
+} from "../data/entity";
 import { AuthUser } from "aws-amplify/auth";
 
 export default function SettingsPage(props: {
   budget: BudgetEntity;
   user: AuthUser;
+  settings?: SettingsEntity;
 }) {
   const handleSuccess = () => {
     alert("success!");

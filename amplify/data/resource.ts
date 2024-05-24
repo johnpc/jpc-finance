@@ -77,6 +77,11 @@ const schema = a.schema({
     })
     .secondaryIndexes((index) => [index("budgetBudgetCategoriesId")])
     .authorization((allow) => [allow.custom(), allow.owner()]),
+  Settings: a
+    .model({
+      enableFinanceKit: a.boolean().required().default(false),
+    })
+    .authorization((allow) => [allow.custom(), allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

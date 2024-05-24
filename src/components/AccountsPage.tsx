@@ -5,8 +5,10 @@ import { Button, Divider, Loader } from "@aws-amplify/ui-react";
 import Transactions from "./Transactions/Transactions";
 import {
   AccountEntity,
+  SettingsEntity,
   TransactionEntity,
   createTellerAuthorization,
+  updateSettings,
 } from "../data/entity";
 import Accounts from "./Accounts/Accounts";
 import { createLinkToken, exchangePublicToken } from "../helpers/plaid";
@@ -19,6 +21,7 @@ export default function AccountsPage(props: {
   user: AuthUser;
   transactions: TransactionEntity[];
   accounts: AccountEntity[];
+  settings?: SettingsEntity;
 }) {
   const [plaidToken, setPlaidToken] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -44,11 +47,13 @@ export default function AccountsPage(props: {
 
   const handleAddAccountViaFinanceKit = async () => {
     const auth = await JPCFinanceKit.requestAuthorization();
-    console.log({auth});
-    // const accounts = await JPCFinanceKit.accounts();
-    // console.log({accounts});
-    // const transactions = await JPCFinanceKit.transactions();
-    // console.log({transactions});
+    console.log({ auth });
+    const updatedSettings = await updateSettings({ ...props.settings!, enableFinanceKit: true });
+    console.log({updatedSettings});
+  };
+
+  const handleRemoveFinanceKit = async () => {
+    await updateSettings({ ...props.settings!, enableFinanceKit: false });
   };
 
   let isOauth = false;
@@ -111,12 +116,24 @@ export default function AccountsPage(props: {
       >
         Link Account via Plaid
       </Button>
-      {Capacitor.getPlatform() !== "ios" ? null : ( <>
+      {Capacitor.getPlatform() !== "ios" ? null : (
+        <>
           <Divider margin={"20px"} />
-          <Button onClick={handleAddAccountViaFinanceKit} isFullWidth={true}>
-            Link FinanceKit
-          </Button>
-        </>)}
+          {props.settings?.enableFinanceKit ? (
+            <Button onClick={handleRemoveFinanceKit} isFullWidth={true}>
+              Unlink FinanceKit
+            </Button>
+          ) : (
+            <Button
+              disabled={!props.settings}
+              onClick={handleAddAccountViaFinanceKit}
+              isFullWidth={true}
+            >
+              Link FinanceKit
+            </Button>
+          )}
+        </>
+      )}
       <Divider margin={"20px"} />
       <Transactions transactions={props.transactions} />
     </>

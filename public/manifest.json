@@ -49,8 +49,8 @@
   ],
   "orientation": "any",
   "background_color": "#DB7093",
+  "theme_color": "#DB7093",
   "display": "standalone",
   "scope": "/",
-  "theme_color": "#DB7093",
   "description": "Dead simple budget tracker"
 }

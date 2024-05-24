@@ -2,6 +2,7 @@ import {
   AccountEntity,
   BudgetCategoryEntity,
   BudgetEntity,
+  SettingsEntity,
   TransactionEntity,
 } from "../data/entity";
 import UncategorizedTransactions from "./Budget/UncategorizedTransactions";
@@ -16,6 +17,7 @@ export default function BudgetPage(props: {
   transactions: TransactionEntity[];
   accounts: AccountEntity[];
   date: Date;
+  settings?: SettingsEntity;
 }) {
   const [selectedCategory, setSelectedCategory] =
     useState<BudgetCategoryEntity>();
@@ -40,7 +42,7 @@ export default function BudgetPage(props: {
         </>
       ) : (
         <>
-          <SyncTransactionsButton date={props.date} />
+          <SyncTransactionsButton settings={props.settings} date={props.date} />
           <BudgetProgress {...props} />
           <BudgetTable
             {...props}

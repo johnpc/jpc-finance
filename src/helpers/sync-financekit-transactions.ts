@@ -5,14 +5,7 @@ import { JPCFinanceKit } from "@johnpc/financekit-capacitor";
 import { endOfMonth, subMonths } from "date-fns";
 
 const client = generateClient<Schema>();
-// "value": accounts.map{ ["name": $0.displayName, "id": $0.id.uuidString] }
 
-// type FinanceKitAccount = {
-//   name: string;
-//   id: string;
-// };
-
-// print(transactions.map{ ["amount": $0.transactionAmount.amount, "id": $0.id.uuidString, "merchantName": $0.merchantName, "date": $0.transactionDate.timeIntervalSince1970, "status": $0.status.rawValue, "description": $0.originalTransactionDescription] })
 type FinanceKitTransaction = {
   id: string;
   amount: number;
@@ -98,13 +91,9 @@ const syncTransactions = async (
 };
 
 export const syncFinanceKitTransactions = async (date: Date) => {
-  const authStatus = await JPCFinanceKit.authorizationStatus();
-  if (!authStatus.value) {
-    console.log({ authStatus });
-    return;
-  }
   try {
     const financeKitTransactions = await JPCFinanceKit.transactions();
+    console.log({ financeKitTransactions: financeKitTransactions.value });
     await syncTransactions(financeKitTransactions.value, date);
   } catch (e) {
     console.log(e);

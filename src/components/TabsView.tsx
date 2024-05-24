@@ -6,16 +6,20 @@ import { useEffect, useState } from "react";
 import {
   AccountEntity,
   BudgetEntity,
+  SettingsEntity,
   TransactionEntity,
   createAccountListener,
   createBudgetCategoryListener,
+  createSettingsListener,
   createTransactionListener,
   deleteBudgetCategoryListener,
   getBudgetForDate,
+  getOrCreateSettings,
   listAccounts,
   listTransactions,
   unsubscribeListener,
   updateBudgetCategoryListener,
+  updateSettingsListener,
   updateTransactionListener,
 } from "../data/entity";
 import { AuthUser, getCurrentUser } from "aws-amplify/auth";
@@ -27,6 +31,7 @@ export default function TabsView() {
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [budget, setBudget] = useState<BudgetEntity>();
+  const [settings, setSettings] = useState<SettingsEntity>();
   const [user, setUser] = useState<AuthUser>();
   const [date, setDate] = useState<Date>(new Date());
 
@@ -40,6 +45,8 @@ export default function TabsView() {
       setAccounts(accounts);
       const user = await getCurrentUser();
       setUser(user);
+      const settings = await getOrCreateSettings();
+      setSettings(settings);
     };
 
     setup();
@@ -88,6 +95,17 @@ export default function TabsView() {
         setBudget(budget);
       },
     );
+
+    const createSettingsSubscription = createSettingsListener(
+      async (settings: SettingsEntity) => {
+        setSettings(settings);
+      },
+    );
+    const updateSettingsSubscription = updateSettingsListener(
+      async (settings: SettingsEntity) => {
+        setSettings(settings);
+      },
+    );
     App.addListener("appStateChange", async ({ isActive }) => {
       if (isActive) {
         setToggleListeners(!toggleListeners);
@@ -100,6 +118,8 @@ export default function TabsView() {
       }
     });
     return () => {
+      unsubscribeListener(createSettingsSubscription);
+      unsubscribeListener(updateSettingsSubscription);
       unsubscribeListener(createAccountSubscription);
       unsubscribeListener(createBudgetCategorySubscription);
       unsubscribeListener(updateBudgetCategorySubscription);
@@ -166,6 +186,7 @@ export default function TabsView() {
                 transactions={transactions}
                 budget={budget}
                 date={date}
+                settings={settings}
               />
             ),
           },
@@ -177,13 +198,16 @@ export default function TabsView() {
                 accounts={accounts}
                 transactions={transactions}
                 user={user}
+                settings={settings}
               />
             ),
           },
           {
             label: "Settings",
             value: "Settings",
-            content: <SettingsPage user={user} budget={budget} />,
+            content: (
+              <SettingsPage settings={settings} user={user} budget={budget} />
+            ),
           },
         ]}
       />

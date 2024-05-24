@@ -12,7 +12,7 @@ def capacitor_pods
   pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
-  pod 'JohnpcFinancekitCapacitor', :path => '../../../financekit-capacitor-plugin/financekit-capacitor'
+  pod 'JohnpcFinancekitCapacitor', :path => '../../node_modules/@johnpc/financekit-capacitor'
 end
 
 target 'App' do

@@ -29,6 +29,11 @@ export type AccountEntity = {
   tellerioAccountId?: string;
 };
 
+export type SettingsEntity = {
+  id: string;
+  enableFinanceKit: boolean;
+};
+
 export type BudgetCategoryEntity = {
   id: string;
   name: string;
@@ -41,6 +46,15 @@ export type BudgetEntity = {
   id: string;
   budgetMonth: string;
   budgetCategories: BudgetCategoryEntity[];
+};
+
+const hydrateSettings = (
+  settings: Schema["Settings"]["type"],
+): SettingsEntity => {
+  return {
+    id: settings.id,
+    enableFinanceKit: settings.enableFinanceKit ?? false,
+  };
 };
 
 const hydrateAccount = (account: Schema["Account"]["type"]): AccountEntity => {
@@ -106,6 +120,28 @@ export const listAccounts = async (): Promise<AccountEntity[]> => {
       hydrateAccount(account),
     ) ?? []
   );
+};
+
+export const getOrCreateSettings = async (): Promise<SettingsEntity> => {
+  const existingSettings = await client.models.Settings.list();
+  const existingUserSettings = existingSettings.data?.find((s) => s);
+  if (existingUserSettings) {
+    return hydrateSettings(existingUserSettings);
+  }
+
+  const createdSettings = await client.models.Settings.create({
+    enableFinanceKit: false,
+  });
+  return hydrateSettings(createdSettings.data!);
+};
+
+export const updateSettings = async (
+  settings: SettingsEntity,
+): Promise<SettingsEntity> => {
+  const updatedSettings = await client.models.Settings.update({
+    ...settings,
+  });
+  return hydrateSettings(updatedSettings.data!);
 };
 
 export const listTransactions = async (
@@ -380,6 +416,34 @@ export const updateTransactionListener = (
   const listener = client.models.Transaction.onUpdate().subscribe({
     next: async (transaction: Schema["Transaction"]["type"]) => {
       fn(hydrateTransaction(transaction));
+    },
+    error: (error: Error) => {
+      console.error("Subscription error", error);
+    },
+  });
+  return listener;
+};
+
+export const updateSettingsListener = (
+  fn: (settings: SettingsEntity) => void,
+) => {
+  const listener = client.models.Settings.onUpdate().subscribe({
+    next: async (settings: Schema["Settings"]["type"]) => {
+      fn(hydrateSettings(settings));
+    },
+    error: (error: Error) => {
+      console.error("Subscription error", error);
+    },
+  });
+  return listener;
+};
+
+export const createSettingsListener = (
+  fn: (settings: SettingsEntity) => void,
+) => {
+  const listener = client.models.Settings.onCreate().subscribe({
+    next: async (settings: Schema["Settings"]["type"]) => {
+      fn(hydrateSettings(settings));
     },
     error: (error: Error) => {
       console.error("Subscription error", error);
