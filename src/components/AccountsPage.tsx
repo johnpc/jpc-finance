@@ -48,8 +48,11 @@ export default function AccountsPage(props: {
   const handleAddAccountViaFinanceKit = async () => {
     const auth = await JPCFinanceKit.requestAuthorization();
     console.log({ auth });
-    const updatedSettings = await updateSettings({ ...props.settings!, enableFinanceKit: true });
-    console.log({updatedSettings});
+    const updatedSettings = await updateSettings({
+      ...props.settings!,
+      enableFinanceKit: true,
+    });
+    console.log({ updatedSettings });
   };
 
   const handleRemoveFinanceKit = async () => {

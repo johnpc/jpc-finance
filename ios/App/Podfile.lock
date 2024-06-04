@@ -4,6 +4,8 @@ PODS:
   - CapacitorApp (5.0.7):
     - Capacitor
   - CapacitorCordova (5.7.5)
+  - CapacitorLocalNotifications (5.0.7):
+    - Capacitor
   - JohnpcFinancekitCapacitor (0.0.3):
     - Capacitor
 
@@ -11,6 +13,7 @@ DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
   - "JohnpcFinancekitCapacitor (from `../../node_modules/@johnpc/financekit-capacitor`)"
 
 EXTERNAL SOURCES:
@@ -20,6 +23,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/app"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorLocalNotifications:
+    :path: "../../node_modules/@capacitor/local-notifications"
   JohnpcFinancekitCapacitor:
     :path: "../../node_modules/@johnpc/financekit-capacitor"
 
@@ -27,8 +32,9 @@ SPEC CHECKSUMS:
   Capacitor: 7d42085cb786b2d3ea9ac8a17ebd7e3305be7b72
   CapacitorApp: 17fecd0e6cb23feafac7eb0939417389038b0979
   CapacitorCordova: c946a6052b547e1e185fc46862003f7b9130ead1
+  CapacitorLocalNotifications: c58afadd159f6bc540ef9b3cbdbc82510a2bf112
   JohnpcFinancekitCapacitor: ca9ad55d30d279abedf2b0a427b3babe29ab70d5
 
-PODFILE CHECKSUM: f05f09c1228d7ec22cccdd40d355824a8e0752a0
+PODFILE CHECKSUM: 90cd720faa5cc0a3f8fb6ec12b78b184ed71d4b6
 
 COCOAPODS: 1.15.2
