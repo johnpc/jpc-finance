@@ -6,6 +6,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Text,
   useTheme,
 } from "@aws-amplify/ui-react";
 import {
@@ -17,6 +18,7 @@ import {
   updateBudgetCategory,
 } from "../../data/entity";
 import { Fragment, useState } from "react";
+import { Delete } from "@mui/icons-material";
 
 export default function BudgetTable(props: {
   budget: BudgetEntity;
@@ -25,6 +27,10 @@ export default function BudgetTable(props: {
 }) {
   const { tokens } = useTheme();
   const [preferRemaining, setPreferRemaining] = useState<boolean>(false);
+  const incomeCategory = props.budget.budgetCategories.find(
+    (budgetCategory) => budgetCategory.type === "Income",
+  )!;
+  const incomeAmount = incomeCategory.plannedAmount / 100;
 
   const sections = [
     { title: "Income", subtitle: "Cash coming in" },
@@ -69,9 +75,53 @@ export default function BudgetTable(props: {
         const categories = props.budget.budgetCategories.filter(
           (budgetCategory) => budgetCategory.type === section.title,
         );
+        const sectionPlannedAmount = categories.reduce(
+          (acc, category) => acc + category.plannedAmount / 100,
+          0,
+        );
+        const sectionSpentAmount =
+          categories.reduce(
+            (acc, category) =>
+              acc +
+              category.transactions.reduce(
+                (sum, transaction) => sum + transaction.amount,
+                0,
+              ),
+            0,
+          ) / 100;
+        const moneyFormatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
+        console.log({
+          sectionSpentAmount,
+          sectionPlannedAmount,
+        });
+        const caption = (
+          <>
+            <Text
+              as="div"
+              fontSize={tokens.fontSizes.large}
+              fontWeight={"bold"}
+            >
+              {section.title}
+            </Text>
+            <Text>
+              Spent {moneyFormatter.format(sectionSpentAmount)} (
+              {((sectionSpentAmount * 100) / sectionPlannedAmount).toFixed(0)}%
+              of planned)
+            </Text>
+            <Text marginBottom={tokens.space.small}>
+              {" "}
+              {section.subtitle} - {moneyFormatter.format(sectionPlannedAmount)}{" "}
+              ({((sectionPlannedAmount / incomeAmount) * 100).toFixed(0)}%)
+            </Text>
+            <Divider marginBottom={tokens.space.xs} />
+          </>
+        );
         return (
           <Fragment key={section.title}>
-            <Table highlightOnHover={false} caption={section.title}>
+            <Table highlightOnHover={false} caption={caption}>
               <TableHead>
                 <TableRow>
                   <TableCell as="th">Name</TableCell>
@@ -132,7 +182,7 @@ export default function BudgetTable(props: {
                         </Fragment>
                       )}
                       <TableCell onClick={() => removeBudgetCategory(category)}>
-                        ❌
+                        <Delete />
                       </TableCell>
                     </TableRow>
                   );

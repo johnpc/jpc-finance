@@ -37,16 +37,35 @@ export default function TabsView() {
 
   useEffect(() => {
     const setup = async () => {
-      const budget = await getBudgetForDate(date);
-      setBudget(budget);
-      const transactions = await listTransactions(date);
-      setTransactions(transactions);
-      const accounts = await listAccounts();
-      setAccounts(accounts);
-      const user = await getCurrentUser();
-      setUser(user);
-      const settings = await getOrCreateSettings();
-      setSettings(settings);
+      const updateBudget = async () => {
+        const budget = await getBudgetForDate(date);
+        setBudget(budget);
+      };
+      const updateTransaction = async () => {
+        const transactions = await listTransactions(date);
+        setTransactions(transactions);
+      };
+      const updateAccounts = async () => {
+        const accounts = await listAccounts();
+        setAccounts(accounts);
+      };
+
+      const updateUser = async () => {
+        const user = await getCurrentUser();
+        setUser(user);
+      };
+
+      const updateSettings = async () => {
+        const settings = await getOrCreateSettings();
+        setSettings(settings);
+      };
+      await Promise.all([
+        updateBudget(),
+        updateTransaction(),
+        updateAccounts(),
+        updateUser(),
+        updateSettings(),
+      ]);
     };
 
     setup();
