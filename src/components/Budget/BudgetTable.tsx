@@ -27,10 +27,10 @@ export default function BudgetTable(props: {
 }) {
   const { tokens } = useTheme();
   const [preferRemaining, setPreferRemaining] = useState<boolean>(false);
-  const incomeCategory = props.budget.budgetCategories.find(
+  const incomeCategory = props.budget.budgetCategories.filter(
     (budgetCategory) => budgetCategory.type === "Income",
   )!;
-  const incomeAmount = incomeCategory.plannedAmount / 100;
+  const incomeAmount = incomeCategory.reduce((acc, category) => acc + category.plannedAmount, 0) / 100;
 
   const sections = [
     { title: "Income", subtitle: "Cash coming in" },
