@@ -17,6 +17,7 @@ export default function BudgetPage(props: {
   transactions: TransactionEntity[];
   accounts: AccountEntity[];
   date: Date;
+  updateTransactions: () => Promise<void>;
   settings?: SettingsEntity;
 }) {
   const [selectedCategory, setSelectedCategory] =
@@ -42,7 +43,7 @@ export default function BudgetPage(props: {
         </>
       ) : (
         <>
-          <SyncTransactionsButton settings={props.settings} date={props.date} />
+          <SyncTransactionsButton updateTransactions={props.updateTransactions} settings={props.settings} date={props.date} />
           <BudgetProgress {...props} />
           <BudgetTable
             {...props}

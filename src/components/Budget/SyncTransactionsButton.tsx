@@ -4,6 +4,7 @@ import { syncAllTransactions } from "../../helpers/sync-all-transactions";
 import { SettingsEntity } from "../../data/entity";
 export default function SyncTransactionsButton(props: {
   date: Date;
+  updateTransactions: () => Promise<void>;
   settings?: SettingsEntity;
 }) {
   const { tokens } = useTheme();
@@ -18,6 +19,7 @@ export default function SyncTransactionsButton(props: {
       console.error(e);
       setError(true);
     }
+    await props.updateTransactions();
     setSyncing(false);
   };
 

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "sandbox": "ampx sandbox --stream-function-logs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "prod-config": "ampx generate outputs --app-id d1vtztqzhv9x55 --branch main --profile personal",

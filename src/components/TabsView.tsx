@@ -34,6 +34,10 @@ export default function TabsView() {
   const [settings, setSettings] = useState<SettingsEntity>();
   const [user, setUser] = useState<AuthUser>();
   const [date, setDate] = useState<Date>(new Date());
+  const updateTransactions = async () => {
+    const transactions = await listTransactions(date);
+    setTransactions(transactions);
+  };
 
   useEffect(() => {
     const setup = async () => {
@@ -41,10 +45,7 @@ export default function TabsView() {
         const budget = await getBudgetForDate(date);
         setBudget(budget);
       };
-      const updateTransaction = async () => {
-        const transactions = await listTransactions(date);
-        setTransactions(transactions);
-      };
+
       const updateAccounts = async () => {
         const accounts = await listAccounts();
         setAccounts(accounts);
@@ -61,7 +62,7 @@ export default function TabsView() {
       };
       await Promise.all([
         updateBudget(),
-        updateTransaction(),
+        updateTransactions(),
         updateAccounts(),
         updateUser(),
         updateSettings(),
@@ -203,6 +204,7 @@ export default function TabsView() {
               <BudgetPage
                 accounts={accounts}
                 transactions={transactions}
+                updateTransactions={updateTransactions}
                 budget={budget}
                 date={date}
                 settings={settings}
