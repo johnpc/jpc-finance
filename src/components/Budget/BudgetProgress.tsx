@@ -10,6 +10,7 @@ import { BudgetEntity } from "../../data/entity";
 
 export default function BudgetProgress(props: { budget: BudgetEntity }) {
   const { tokens } = useTheme();
+
   const incomeCategory = props.budget.budgetCategories.filter(
     (budgetCategory) => budgetCategory.type === "Income",
   )!;

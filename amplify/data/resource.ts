@@ -57,6 +57,7 @@ const schema = a.schema({
       index("plaidTransactionId"),
       index("tellerioTransactionId"),
       index("financeKitTransactionId"),
+      index("budgetCategoryTransactionsId"),
     ])
     .authorization((allow) => [allow.custom(), allow.owner()]),
   Budget: a

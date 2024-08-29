@@ -78,7 +78,14 @@ const hydrateTransaction = (
 const hydrateBudgetCategory = async (
   budgetCategory: Schema["BudgetCategory"]["type"],
 ): Promise<BudgetCategoryEntity> => {
-  const transactions = await budgetCategory.transactions({ limit: 10000 });
+  const transactions =
+    await client.models.Transaction.listTransactionByBudgetCategoryTransactionsId(
+      {
+        budgetCategoryTransactionsId: budgetCategory.id,
+        // limit: 10000,
+      },
+    );
+  // const transactions = await budgetCategory.transactions({ limit: 10000 });
   const transactionEntities = transactions.data.map(
     (transaction: Schema["Transaction"]["type"]) =>
       hydrateTransaction(transaction),

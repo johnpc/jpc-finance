@@ -36,6 +36,7 @@ export default function TabsView() {
   const [date, setDate] = useState<Date>(new Date());
   const updateTransactions = async () => {
     const transactions = await listTransactions(date);
+    console.log({ transactionsToUpdate: transactions });
     setTransactions(transactions);
   };
 
@@ -43,6 +44,8 @@ export default function TabsView() {
     const setup = async () => {
       const updateBudget = async () => {
         const budget = await getBudgetForDate(date);
+        console.log({budgetToUpdate: budget})
+
         setBudget(budget);
       };
 
