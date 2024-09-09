@@ -82,7 +82,7 @@ const syncTransactions = async (
       tellerioTransactionId: tellerioTransaction.id,
       owner,
     }));
-  for (const transaction of transactions) {
+  const transactionPromises = transactions.map(async (transaction) => {
     const existingTransactions =
       await client.models.Transaction.listTransactionByTellerioTransactionId({
         tellerioTransactionId: transaction.tellerioTransactionId,
@@ -101,7 +101,8 @@ const syncTransactions = async (
       });
       console.log({ updated, errors: updated.errors });
     }
-  }
+  });
+  await Promise.all(transactionPromises);
   return transactions;
 };
 
@@ -119,12 +120,17 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
       accessToken,
       date,
     );
-    const amplifyAccounts = await syncAccounts(accounts, owner);
-    aggregatedAccounts.push(amplifyAccounts);
-    const amplifyTransactions = await syncTransactions(transactions, owner);
-    aggregatedTransactions.push(
-      amplifyTransactions as Schema["Transaction"]["type"][],
-    );
+    const sa = async () => {
+      const amplifyAccounts = await syncAccounts(accounts, owner);
+      aggregatedAccounts.push(amplifyAccounts);
+    }
+    const st = async () => {
+      const amplifyTransactions = await syncTransactions(transactions, owner);
+      aggregatedTransactions.push(
+        amplifyTransactions as Schema["Transaction"]["type"][],
+      );
+    }
+    await Promise.all([sa(), st()]);
   });
   await Promise.all(promises);
 

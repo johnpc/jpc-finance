@@ -85,6 +85,7 @@ const hydrateBudgetCategory = async (
         // limit: 10000,
       },
     );
+  console.log({ transactionsToHydrate: transactions, budgetCategory });
   // const transactions = await budgetCategory.transactions({ limit: 10000 });
   const transactionEntities = transactions.data.map(
     (transaction: Schema["Transaction"]["type"]) =>
@@ -305,7 +306,10 @@ export const getBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
   const allBudgets = await client.models.Budget.listBudgetByBudgetMonth({
     budgetMonth,
   });
-  const budget = allBudgets.data.find((b: Schema["Budget"]["type"]) => b);
+  console.log({ allBudgets });
+  const budget = allBudgets.data
+    .reverse()
+    .find((b: Schema["Budget"]["type"]) => b);
   if (!budget) {
     return await createBudgetForDate(date);
   }

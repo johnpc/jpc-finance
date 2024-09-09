@@ -27,7 +27,7 @@ export default function AccountsPage(props: {
   const [syncing, setSyncing] = useState(false);
   const { open, ready } = useTellerConnect({
     applicationId: "app_otq7p1qk69rkla3vmq000",
-    onSuccess: async (authorization) => {
+    onSuccess: async (authorization: {accessToken: string}) => {
       // Save your access token here
       console.log({ authorization });
       setSyncing(true);

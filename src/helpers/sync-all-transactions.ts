@@ -7,7 +7,7 @@ import { SettingsEntity } from "../data/entity";
 export const syncAllTransactions = async (
   date: Date,
   settings?: SettingsEntity,
-) => {
+): Promise<void> => {
   const promises = [
     syncTellerioTransactions(date),
     syncPlaidTransactions(date),
@@ -15,5 +15,5 @@ export const syncAllTransactions = async (
   if (Capacitor.getPlatform() === "ios" && settings?.enableFinanceKit) {
     promises.push(syncFinanceKitTransactions(date));
   }
-  return await Promise.all(promises);
+  await Promise.all(promises);
 };

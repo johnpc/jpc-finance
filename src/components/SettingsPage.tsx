@@ -4,6 +4,7 @@ import {
   Card,
   Divider,
   Heading,
+  Text,
   useTheme,
 } from "@aws-amplify/ui-react";
 import SignOutButton from "./Settings/SignOutButton";
@@ -84,6 +85,7 @@ export default function SettingsPage(props: {
       >
         Reset Budget
       </Button>
+      <Text fontSize={"xs"} as="p">This will uncategorize all transactions for the month in case you'd like to recategorize everything.</Text>
     </Card>
   );
 }

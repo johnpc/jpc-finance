@@ -3,7 +3,7 @@ backend:
   phases:
     build:
       commands:
-        - npm ci --cache .npm --prefer-offline
+        - npm install
         - export AWS_BRANCH_THAT_ACTUALLY_EXISTS=$(if [ -z "$AWS_PULL_REQUEST_ID" ]; then echo $AWS_BRANCH; else echo pr-$AWS_PULL_REQUEST_ID; fi)
         - npx ampx generate outputs --branch $AWS_BRANCH_THAT_ACTUALLY_EXISTS --app-id $AWS_APP_ID || echo "{}" > amplify_outputs.json
         - npx ampx pipeline-deploy --branch $AWS_BRANCH_THAT_ACTUALLY_EXISTS --app-id $AWS_APP_ID
@@ -16,6 +16,4 @@ frontend:
     baseDirectory: dist
     files:
       - "**/*"
-  cache:
-    paths:
-      - .npm/**/*
+
