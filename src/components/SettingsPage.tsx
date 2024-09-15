@@ -18,7 +18,7 @@ import { LocalNotifications, Weekday } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 
 export default function SettingsPage(props: {
-  budget: BudgetEntity;
+  budget: BudgetEntity | undefined;
   user: AuthUser;
   settings?: SettingsEntity;
 }) {
@@ -78,14 +78,19 @@ export default function SettingsPage(props: {
           Setup Notifications
         </Button>
       )}
-      <Button
-        isFullWidth={true}
-        variation="primary"
-        onClick={() => onResetBudget(props.budget)}
-      >
-        Reset Budget
-      </Button>
-      <Text fontSize={"xs"} as="p">This will uncategorize all transactions for the month in case you'd like to recategorize everything.</Text>
+      {props.budget ? (
+        <Button
+          isFullWidth={true}
+          variation="primary"
+          onClick={() => onResetBudget(props.budget!)}
+        >
+          Reset Budget
+        </Button>
+      ) : null}
+      <Text fontSize={"xs"} as="p">
+        This will uncategorize all transactions for the month in case you'd like
+        to recategorize everything.
+      </Text>
     </Card>
   );
 }

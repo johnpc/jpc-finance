@@ -2,6 +2,7 @@ import { Button, Loader, Tabs, Text } from "@aws-amplify/ui-react";
 import BudgetPage from "./BudgetPage";
 import AccountsPage from "./AccountsPage";
 import SettingsPage from "./SettingsPage";
+import ChatPage from "./ChatPage";
 import { useEffect, useState } from "react";
 import {
   AccountEntity,
@@ -10,6 +11,7 @@ import {
   TransactionEntity,
   createAccountListener,
   createBudgetCategoryListener,
+  createBudgetListener,
   createSettingsListener,
   createTransactionListener,
   deleteBudgetCategoryListener,
@@ -27,10 +29,12 @@ import { App, URLOpenListenerEvent } from "@capacitor/app";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import { addMonths, subMonths } from "date-fns";
 export default function TabsView() {
+  const [randomNumber, setRandomNumber] = useState(Math.random());
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [toggleListeners, setToggleListeners] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
-  const [budget, setBudget] = useState<BudgetEntity>();
+  const [budget, setBudget] = useState<BudgetEntity | undefined>();
   const [settings, setSettings] = useState<SettingsEntity>();
   const [user, setUser] = useState<AuthUser>();
   const [date, setDate] = useState<Date>(new Date());
@@ -44,9 +48,10 @@ export default function TabsView() {
     const setup = async () => {
       const updateBudget = async () => {
         const budget = await getBudgetForDate(date);
-        console.log({budgetToUpdate: budget})
+        console.log({ budgetToUpdate: budget });
 
         setBudget(budget);
+        setIsLoading(false);
       };
 
       const updateAccounts = async () => {
@@ -76,6 +81,10 @@ export default function TabsView() {
   }, [date]);
 
   useEffect(() => {
+    const createBudgetSubscription = createBudgetListener(async () => {
+      const budget = await getBudgetForDate(date);
+      setBudget(budget);
+    });
     const createBudgetCategorySubscription = createBudgetCategoryListener(
       async () => {
         const budget = await getBudgetForDate(date);
@@ -144,6 +153,7 @@ export default function TabsView() {
       unsubscribeListener(createSettingsSubscription);
       unsubscribeListener(updateSettingsSubscription);
       unsubscribeListener(createAccountSubscription);
+      unsubscribeListener(createBudgetSubscription);
       unsubscribeListener(createBudgetCategorySubscription);
       unsubscribeListener(updateBudgetCategorySubscription);
       unsubscribeListener(removeBudgetCategorySubscription);
@@ -162,7 +172,7 @@ export default function TabsView() {
     setDate(day);
   };
 
-  if (!budget || !user) return <Loader variation="linear" />;
+  if (isLoading || !user) return <Loader variation="linear" />;
   const dateLocaleString = date.toLocaleString(undefined, {
     month: "2-digit",
     year: "2-digit",
@@ -199,6 +209,7 @@ export default function TabsView() {
         spacing="equal"
         justifyContent="space-between"
         defaultValue="Budget"
+        onValueChange={() => setRandomNumber(Math.random())}
         items={[
           {
             label: "Budget",
@@ -225,6 +236,11 @@ export default function TabsView() {
                 settings={settings}
               />
             ),
+          },
+          {
+            label: "Chat",
+            value: "Chat",
+            content: <ChatPage user={user} randomNumber={randomNumber} />,
           },
           {
             label: "Settings",

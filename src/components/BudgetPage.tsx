@@ -2,6 +2,7 @@ import {
   AccountEntity,
   BudgetCategoryEntity,
   BudgetEntity,
+  createBudgetForDate,
   SettingsEntity,
   TransactionEntity,
 } from "../data/entity";
@@ -11,9 +12,9 @@ import BudgetTable from "./Budget/BudgetTable";
 import { useEffect, useState } from "react";
 import BudgetCategoryDetail from "./Budget/BudgetCategoryDetail";
 import SyncTransactionsButton from "./Budget/SyncTransactionsButton";
-
+import { Button } from "@aws-amplify/ui-react";
 export default function BudgetPage(props: {
-  budget: BudgetEntity;
+  budget: BudgetEntity | undefined;
   transactions: TransactionEntity[];
   accounts: AccountEntity[];
   date: Date;
@@ -25,12 +26,24 @@ export default function BudgetPage(props: {
 
   useEffect(() => {
     if (selectedCategory) {
-      const category = props.budget.budgetCategories.find(
+      const category = props.budget?.budgetCategories.find(
         (c) => c.id === selectedCategory.id,
       );
       setSelectedCategory(category);
     }
-  }, [props.transactions, selectedCategory, props.budget.budgetCategories]);
+  }, [props.transactions, selectedCategory, props.budget?.budgetCategories]);
+
+  const createBudget = async () => {
+    createBudgetForDate(props.date);
+  };
+
+  if (!props.budget) {
+    return (
+      <>
+        <Button onClick={createBudget}>Create Budget</Button>
+      </>
+    );
+  }
 
   return (
     <>
@@ -43,10 +56,15 @@ export default function BudgetPage(props: {
         </>
       ) : (
         <>
-          <SyncTransactionsButton updateTransactions={props.updateTransactions} settings={props.settings} date={props.date} />
-          <BudgetProgress {...props} />
+          <SyncTransactionsButton
+            updateTransactions={props.updateTransactions}
+            settings={props.settings}
+            date={props.date}
+          />
+          <BudgetProgress {...props} budget={props.budget} />
           <BudgetTable
             {...props}
+            budget={props.budget}
             onClickBudgetCategory={(category) => setSelectedCategory(category)}
           />
           <UncategorizedTransactions

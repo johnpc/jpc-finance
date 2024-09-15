@@ -283,7 +283,9 @@ const copyBudgetForDate = async (
   return hydrateBudget(createdBudget.data!);
 };
 
-const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
+export const createBudgetForDate = async (
+  date: Date,
+): Promise<BudgetEntity> => {
   const allBudgets = await client.models.Budget.list();
   const budget = allBudgets.data
     ?.sort(
@@ -298,7 +300,9 @@ const createBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
   return await copyBudgetForDate(await hydrateBudget(budget), date);
 };
 
-export const getBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
+export const getBudgetForDate = async (
+  date: Date,
+): Promise<BudgetEntity | undefined> => {
   const budgetMonth = date.toLocaleDateString(undefined, {
     month: "2-digit",
     year: "2-digit",
@@ -307,13 +311,11 @@ export const getBudgetForDate = async (date: Date): Promise<BudgetEntity> => {
     budgetMonth,
   });
   console.log({ allBudgets });
-  const budget = allBudgets.data
-    .reverse()
-    .find((b: Schema["Budget"]["type"]) => b);
-  if (!budget) {
-    return await createBudgetForDate(date);
-  }
-  return await hydrateBudget(budget);
+  allBudgets.data.sort((a, b) => {
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+  const budget = allBudgets.data.find((b: Schema["Budget"]["type"]) => b);
+  return budget ? await hydrateBudget(budget) : undefined;
 };
 
 export const createBudgetCategory = async (
@@ -357,6 +359,18 @@ export const updateTransaction = async (transaction: TransactionEntity) => {
     id: transaction.id,
     budgetCategoryTransactionsId: transaction.budgetCategoryId as string,
   });
+};
+
+export const createBudgetListener = (fn: () => void) => {
+  const listener = client.models.Budget.onCreate().subscribe({
+    next: async () => {
+      fn();
+    },
+    error: (error: Error) => {
+      console.error("Subscription error", error);
+    },
+  });
+  return listener;
 };
 
 export const createBudgetCategoryListener = (fn: () => void) => {

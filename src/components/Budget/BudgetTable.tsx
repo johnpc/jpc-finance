@@ -30,7 +30,9 @@ export default function BudgetTable(props: {
   const incomeCategory = props.budget.budgetCategories.filter(
     (budgetCategory) => budgetCategory.type === "Income",
   )!;
-  const incomeAmount = incomeCategory.reduce((acc, category) => acc + category.plannedAmount, 0) / 100;
+  const incomeAmount =
+    incomeCategory.reduce((acc, category) => acc + category.plannedAmount, 0) /
+    100;
 
   const sections = [
     { title: "Income", subtitle: "Cash coming in" },

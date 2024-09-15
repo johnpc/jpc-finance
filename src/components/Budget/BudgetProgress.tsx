@@ -14,7 +14,10 @@ export default function BudgetProgress(props: { budget: BudgetEntity }) {
   const incomeCategory = props.budget.budgetCategories.filter(
     (budgetCategory) => budgetCategory.type === "Income",
   )!;
-  const incomeAmount = incomeCategory.reduce((acc, category) => acc + category.plannedAmount, 0);
+  const incomeAmount = incomeCategory.reduce(
+    (acc, category) => acc + category.plannedAmount,
+    0,
+  );
 
   const expenseAmount = props.budget.budgetCategories
     .filter((budgetCategory) => budgetCategory.type !== "Income")

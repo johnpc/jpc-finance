@@ -72,7 +72,7 @@ const schema = a.schema({
       budget: a.belongsTo("Budget", "budgetBudgetCategoriesId"),
       budgetBudgetCategoriesId: a.string(),
       name: a.string().required(),
-      type: a.ref("BudgetCategoryType").required(),
+      type: a.string().required(),
       transactions: a.hasMany("Transaction", "budgetCategoryTransactionsId"),
       plannedAmount: a.integer().required(),
     })
@@ -83,6 +83,22 @@ const schema = a.schema({
       enableFinanceKit: a.boolean().required().default(false),
     })
     .authorization((allow) => [allow.custom(), allow.owner()]),
+
+  chat: a.conversation({
+    aiModel: a.ai.model("Claude 3.5 Sonnet"),
+    systemPrompt: `You are a helping users understand their spending habits and financial goals. You answer in three sentences or less, using simple english words.`,
+    tools: [
+      {
+        query: a.ref("listBudgets"),
+        description: "Provides information on budget and spending.",
+      },
+    ],
+    inferenceConfiguration: {
+      maxTokens: 500,
+      temperature: 1,
+      topP: 0.5,
+    },
+  }),
 });
 
 export type Schema = ClientSchema<typeof schema>;

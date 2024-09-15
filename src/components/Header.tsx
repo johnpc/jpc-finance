@@ -13,7 +13,7 @@ export const Header = () => {
   return (
     <View
       backgroundColor={tokens.colors.background.secondary}
-      padding={tokens.space.medium}
+      padding={tokens.space.small}
       width={"100%"}
       textAlign={"center"}
     >
@@ -24,8 +24,10 @@ export const Header = () => {
             alignItems="flex-start"
             gap={tokens.space.xs}
           >
-            <Heading level={1}>finance.jpc.io</Heading>
-            <Text as="span">Budget tracker</Text>
+            <Heading level={5}>finance.jpc.io</Heading>
+            <Text as="span" fontSize={"small"}>
+              Budget tracker
+            </Text>
           </Flex>
         </Flex>
       </Card>

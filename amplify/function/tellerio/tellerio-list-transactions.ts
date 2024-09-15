@@ -123,13 +123,13 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
     const sa = async () => {
       const amplifyAccounts = await syncAccounts(accounts, owner);
       aggregatedAccounts.push(amplifyAccounts);
-    }
+    };
     const st = async () => {
       const amplifyTransactions = await syncTransactions(transactions, owner);
       aggregatedTransactions.push(
         amplifyTransactions as Schema["Transaction"]["type"][],
       );
-    }
+    };
     await Promise.all([sa(), st()]);
   });
   await Promise.all(promises);
