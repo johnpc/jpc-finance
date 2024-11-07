@@ -14,11 +14,10 @@ import {
   BudgetEntity,
   TransactionEntity,
   createBudgetCategory,
-  removeBudgetCategory,
   updateBudgetCategory,
 } from "../../data/entity";
 import { Fragment, useState } from "react";
-import { Delete } from "@mui/icons-material";
+import BudgetTableCategoryRow from "./BudgetTableCategoryRow";
 
 export default function BudgetTable(props: {
   budget: BudgetEntity;
@@ -140,53 +139,14 @@ export default function BudgetTable(props: {
               </TableHead>
               <TableBody>
                 {categories.map((category) => {
-                  const planned = category.plannedAmount / 100;
-                  let total = category.transactions.reduce(
-                    (acc, transaction) => transaction.amount / 100 + acc,
-                    0,
-                  );
-                  if (category.type === "Income") {
-                    total = total * -1;
-                  }
-                  const remaining = planned - total;
-                  let backgroundColor = "";
-                  if (total > planned - planned * 0.1)
-                    backgroundColor = tokens.colors.yellow[20].value;
-                  if (total > planned - planned * 0.01)
-                    backgroundColor = tokens.colors.green[20].value;
-                  if (total > planned)
-                    backgroundColor = tokens.colors.red[20].value;
                   return (
-                    <TableRow key={category.id} style={{ backgroundColor }}>
-                      <TableCell onClick={() => updateName(category)}>
-                        {category.name}
-                      </TableCell>
-                      {preferRemaining ? (
-                        <TableCell
-                          onClick={() => props.onClickBudgetCategory(category)}
-                        >
-                          ${remaining.toFixed(2)}
-                        </TableCell>
-                      ) : (
-                        <Fragment>
-                          <TableCell
-                            onClick={() => updatePlannedAmount(category)}
-                          >
-                            ${planned.toFixed(2)}
-                          </TableCell>
-                          <TableCell
-                            onClick={() =>
-                              props.onClickBudgetCategory(category)
-                            }
-                          >
-                            ${total.toFixed(2)}
-                          </TableCell>
-                        </Fragment>
-                      )}
-                      <TableCell onClick={() => removeBudgetCategory(category)}>
-                        <Delete />
-                      </TableCell>
-                    </TableRow>
+                    <BudgetTableCategoryRow
+                      category={category}
+                      updateName={updateName}
+                      preferRemaining={preferRemaining}
+                      onClickBudgetCategory={props.onClickBudgetCategory}
+                      updatePlannedAmount={updatePlannedAmount}
+                    />
                   );
                 })}
                 <TableRow>

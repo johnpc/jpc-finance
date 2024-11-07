@@ -6,12 +6,22 @@ import {
   updateTransaction,
 } from "../../data/entity";
 import { Badge } from "@aws-amplify/ui-react";
+import { useDrag } from "react-dnd";
+const DRAG_TYPE = "UNCATEGORIZED_TRANSACTION";
 
 export default function UncategorizedTransactionBubble(props: {
   transaction: TransactionEntity;
   budgetCategories: BudgetCategoryEntity[];
 }) {
   const [open, setOpen] = useState(false);
+  const [collected, drag] = useDrag(() => ({
+    type: DRAG_TYPE,
+    item: { id: props.transaction.id, transaction: props.transaction },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  }));
+
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -25,21 +35,30 @@ export default function UncategorizedTransactionBubble(props: {
 
   return (
     <>
-      <Badge
-        margin={"auto"}
-        key={props.transaction.id}
-        size="large"
-        variation={props.transaction.amount > 0 ? "warning" : "success"}
-        onClick={handleClickOpen}
+      <div
+        ref={drag}
+        style={{
+          opacity: collected.isDragging ? 0.5 : 1,
+          cursor: "move",
+          touchAction: "none",
+        }}
       >
-        {props.transaction.name}&nbsp;-&nbsp;$
-        {(Math.abs(props.transaction.amount) / 100).toFixed(2)}
-      </Badge>
-      <CategorizeTransactionDialog
-        open={open}
-        onClose={handleClose}
-        budgetCategories={props.budgetCategories}
-      />
+        <Badge
+          margin={"auto"}
+          key={props.transaction.id}
+          size="large"
+          variation={props.transaction.amount > 0 ? "warning" : "success"}
+          onClick={handleClickOpen}
+        >
+          {props.transaction.name}&nbsp;-&nbsp;$
+          {(Math.abs(props.transaction.amount) / 100).toFixed(2)}
+        </Badge>
+        <CategorizeTransactionDialog
+          open={open}
+          onClose={handleClose}
+          budgetCategories={props.budgetCategories}
+        />
+      </div>
     </>
   );
 }

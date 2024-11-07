@@ -28,19 +28,34 @@ import { AuthUser, getCurrentUser } from "aws-amplify/auth";
 import { App, URLOpenListenerEvent } from "@capacitor/app";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import { addMonths, subMonths } from "date-fns";
+import {
+  getCachedAccounts,
+  getCachedBudgetForDate,
+  getCachedTransactionsForDate,
+  setAccountsCache,
+  setBudgetForDateCache,
+  setCachedTransactionsForDate,
+} from "../data/cache";
 export default function TabsView() {
   const [randomNumber, setRandomNumber] = useState(Math.random());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [toggleListeners, setToggleListeners] = useState<boolean>(false);
-  const [transactions, setTransactions] = useState<TransactionEntity[]>([]);
-  const [accounts, setAccounts] = useState<AccountEntity[]>([]);
-  const [budget, setBudget] = useState<BudgetEntity | undefined>();
+  const [accounts, setAccounts] =
+    useState<AccountEntity[]>(getCachedAccounts());
   const [settings, setSettings] = useState<SettingsEntity>();
   const [user, setUser] = useState<AuthUser>();
   const [date, setDate] = useState<Date>(new Date());
+  const [budget, setBudget] = useState<BudgetEntity | undefined>(
+    getCachedBudgetForDate(date),
+  );
+  const [transactions, setTransactions] = useState<TransactionEntity[]>(
+    getCachedTransactionsForDate(date) ?? [],
+  );
+
   const updateTransactions = async () => {
     const transactions = await listTransactions(date);
     console.log({ transactionsToUpdate: transactions });
+    setCachedTransactionsForDate(date, transactions);
     setTransactions(transactions);
   };
 
@@ -50,12 +65,17 @@ export default function TabsView() {
         const budget = await getBudgetForDate(date);
         console.log({ budgetToUpdate: budget });
 
+        if (budget) {
+          setBudgetForDateCache(date, budget);
+        }
+
         setBudget(budget);
         setIsLoading(false);
       };
 
       const updateAccounts = async () => {
         const accounts = await listAccounts();
+        setAccountsCache(accounts);
         setAccounts(accounts);
       };
 
@@ -111,6 +131,7 @@ export default function TabsView() {
     const createTransactionSubscription = createTransactionListener(
       async (transaction: TransactionEntity) => {
         setTransactions([...transactions, transaction]);
+        setCachedTransactionsForDate(date, [...transactions, transaction]);
       },
     );
     const updateTransactionSubscription = updateTransactionListener(
@@ -122,6 +143,7 @@ export default function TabsView() {
           return t;
         });
         setTransactions(updatedTransactions);
+        setCachedTransactionsForDate(date, updatedTransactions);
         // updating transaction budget category requires budget update
         const budget = await getBudgetForDate(date);
         setBudget(budget);
@@ -172,7 +194,7 @@ export default function TabsView() {
     setDate(day);
   };
 
-  if (isLoading || !user) return <Loader variation="linear" />;
+  if ((isLoading && !budget) || !user) return <Loader variation="linear" />;
   const dateLocaleString = date.toLocaleString(undefined, {
     month: "2-digit",
     year: "2-digit",
