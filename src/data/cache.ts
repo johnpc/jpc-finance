@@ -12,8 +12,14 @@ export const getCachedAccounts = () => {
 
 export const getCachedBudgetForDate = (date: Date) => {
   try {
-    return localStorage.getItem(`budget-${date.toLocaleDateString()}`)
-      ? JSON.parse(localStorage.getItem(`budget-${date.toLocaleDateString()}`)!)
+    return localStorage.getItem(
+      `budget-${date.toLocaleDateString(undefined, { month: "2-digit", year: "numeric" })}`,
+    )
+      ? JSON.parse(
+          localStorage.getItem(
+            `budget-${date.toLocaleDateString(undefined, { month: "2-digit", year: "numeric" })}`,
+          )!,
+        )
       : undefined;
   } catch (error) {
     return undefined;
@@ -22,9 +28,13 @@ export const getCachedBudgetForDate = (date: Date) => {
 
 export const getCachedTransactionsForDate = (date: Date) => {
   try {
-    return localStorage.getItem(`transactions-${date.toLocaleDateString()}`)
+    return localStorage.getItem(
+      `transactions-${date.toLocaleDateString(undefined, { month: "2-digit", year: "numeric" })}`,
+    )
       ? JSON.parse(
-          localStorage.getItem(`transactions-${date.toLocaleDateString()}`)!,
+          localStorage.getItem(
+            `transactions-${date.toLocaleDateString(undefined, { month: "2-digit", year: "numeric" })}`,
+          )!,
         )
       : undefined;
   } catch (error) {
@@ -34,7 +44,7 @@ export const getCachedTransactionsForDate = (date: Date) => {
 
 export const setBudgetForDateCache = (date: Date, budget: BudgetEntity) => {
   localStorage.setItem(
-    `budget-${date.toLocaleDateString()}`,
+    `budget-${date.toLocaleDateString(undefined, { month: "2-digit", year: "numeric" })}`,
     JSON.stringify(budget),
   );
 };
@@ -48,7 +58,7 @@ export const setCachedTransactionsForDate = (
   transactions: TransactionEntity[],
 ) => {
   localStorage.setItem(
-    `transaction-${date.toLocaleDateString()}`,
+    `transaction-${date.toLocaleDateString(undefined, { month: "2-digit", year: "numeric" })}`,
     JSON.stringify(transactions),
   );
 };
