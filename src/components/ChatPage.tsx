@@ -4,6 +4,10 @@ import { createAIHooks, AIConversation } from "@aws-amplify/ui-react-ai";
 import type { Schema } from "../../amplify/data/resource";
 import { Loader, ScrollView, Text, View } from "@aws-amplify/ui-react";
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
+
 const client = generateClient<Schema>({ authMode: "userPool" });
 const { useAIConversation } = createAIHooks(client);
 
@@ -21,9 +25,6 @@ function ChatComponent(props: {
     sendMessage,
   ] = useAIConversation("chat", {
     id: props.conversationId ?? undefined,
-    onResponse: (response) => {
-      console.log({ method: "onResponse", response });
-    },
   });
   console.log({ hasError });
   messages.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
@@ -50,38 +51,20 @@ function ChatComponent(props: {
         autoScroll="smooth"
       >
         <AIConversation
-          messages={messages}
-          handleSendMessage={(content) =>
-            sendMessage({
-              ...content,
-              aiContext: { ignoreThisArgument: "true" },
-              // toolConfiguration: {
-              //   tools: {
-              //     generateRecipe: {
-              //       description: "List ingredients needed for a recipe",
-              //       inputSchema: {
-              //         json: {
-              //           type: "object",
-              //           properties: {
-              //             ingredients: {
-              //               type: "array",
-              //               items: {
-              //                 type: "object",
-              //                 properties: {
-              //                   ingredientName: {type: "string"},
-              //                   quantity: {type: "number"},
-              //                   unit: {type: "string"},
-              //               } },
-              //             },
-              //           },
-              //         },
-              //       },
-              //     },
-              //   }
-              // }
-            })
-          }
+          allowAttachments={false}
           variant="bubble"
+          isLoading={isLoading}
+          messages={messages}
+          handleSendMessage={sendMessage}
+          messageRenderer={{
+            text: (input: {text: string}) => {
+              return (
+                <ReactMarkdown rehypePlugins={[rehypeHighlight, remarkGfm]}>
+                  {input.text}
+                </ReactMarkdown>
+              );
+            },
+          }}
           avatars={{
             user: {
               username:

@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.3.0",
-    "@aws-amplify/ui-react-ai": "^0.1.0",
+    "@aws-amplify/ui-react-ai": "ai-streaming",
     "@capacitor/app": "^5.0.7",
     "@capacitor/core": "^5.7.4",
     "@capacitor/ios": "^5.7.4",
@@ -39,7 +39,10 @@
     "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.6",
+    "react-markdown": "^9.0.1",
     "react-plaid-link": "^3.5.1",
+    "rehype-highlight": "^7.0.1",
+    "remark-gfm": "^4.0.0",
     "teller-connect-react": "^0.1.0"
   },
   "devDependencies": {
@@ -69,8 +72,10 @@
     "vite": "^5.2.0"
   },
   "overrides": {
-    "@aws-amplify/data-construct": "ai",
-    "@aws-amplify/graphql-api-construct": "ai"
+    "@aws-amplify/graphql-api-construct": "ai-streaming",
+    "@aws-amplify/appsync-modelgen-plugin": "2.15.0",
+    "@aws-amplify/data-schema": "ai-streaming",
+    "@aws-amplify/ui-react-ai": "ai-streaming"
   },
   "lint-staged": {
     "*.ts": [
