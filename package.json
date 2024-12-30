@@ -15,8 +15,8 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@aws-amplify/ui-react": "^6.3.0",
-    "@aws-amplify/ui-react-ai": "ai-streaming",
+    "@aws-amplify/ui-react": "^6.8.0",
+    "@aws-amplify/ui-react-ai": "^1.2.0",
     "@capacitor/app": "^5.0.7",
     "@capacitor/core": "^5.7.4",
     "@capacitor/ios": "^5.7.4",
@@ -26,7 +26,7 @@
     "@johnpc/financekit-capacitor": "^0.0.3",
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
-    "aws-amplify": "^6.6.0",
+    "aws-amplify": "^6.11.0",
     "aws-lambda": "^1.0.7",
     "axios": "^1.6.8",
     "date-fns": "^3.6.0",
@@ -46,9 +46,9 @@
     "teller-connect-react": "^0.1.0"
   },
   "devDependencies": {
-    "@aws-amplify/backend": "^1.2.1",
-    "@aws-amplify/backend-cli": "^1.2.6",
-    "@aws-sdk/client-bedrock-runtime": "^3.651.1",
+    "@aws-amplify/backend": "^1.11.0",
+    "@aws-amplify/backend-cli": "^1.4.5",
+    "@aws-sdk/client-bedrock-runtime": "^3.716.0",
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^5.7.4",
     "@types/react": "^18.2.66",
@@ -70,12 +70,6 @@
     "tsx": "^4.7.2",
     "typescript": "^5.4.5",
     "vite": "^5.2.0"
-  },
-  "overrides": {
-    "@aws-amplify/graphql-api-construct": "ai-streaming",
-    "@aws-amplify/appsync-modelgen-plugin": "2.15.0",
-    "@aws-amplify/data-schema": "ai-streaming",
-    "@aws-amplify/ui-react-ai": "ai-streaming"
   },
   "lint-staged": {
     "*.ts": [
