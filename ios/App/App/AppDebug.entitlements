@@ -4,7 +4,6 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>webcredentials:finance.jpc.io</string>
 		<string>applinks:finance.jpc.io</string>
 	</array>
 	<key>com.apple.developer.financekit</key>

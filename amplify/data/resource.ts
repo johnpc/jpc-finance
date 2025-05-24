@@ -83,31 +83,6 @@ const schema = a.schema({
       enableFinanceKit: a.boolean().required().default(false),
     })
     .authorization((allow) => [allow.custom(), allow.owner()]),
-
-  chat: a
-    .conversation({
-      aiModel: a.ai.model("Claude 3.5 Sonnet"),
-      systemPrompt: `You are a helping users understand their spending habits and financial goals. You answer in three sentences or less, using simple english words.`,
-      tools: [
-        a.ai.dataTool({
-          // The name of the tool as it will be referenced in the message to the LLM
-          name: "BudgetQuery",
-          // The description of the tool provided to the LLM.
-          // Use this to help the LLM understand when to use the tool.
-          description: "Provides information on budget and spending",
-          // A reference to the `a.model()` that the tool will use
-          model: a.ref("Budget"),
-          // The operation to perform on the model
-          modelOperation: "list",
-        }),
-      ],
-      inferenceConfiguration: {
-        maxTokens: 500,
-        temperature: 1,
-        topP: 0.5,
-      },
-    })
-    .authorization((allow) => allow.owner()),
 });
 
 export type Schema = ClientSchema<typeof schema>;

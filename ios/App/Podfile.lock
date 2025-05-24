@@ -29,12 +29,12 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@johnpc/financekit-capacitor"
 
 SPEC CHECKSUMS:
-  Capacitor: 747aadb4fa786f460d8cd9d0557cb81440a13747
-  CapacitorApp: 102e553c3b1fdc255969c39aa19b529675690ef4
+  Capacitor: 9686e5711b48a1aa84671ede795d0175848abcba
+  CapacitorApp: 8026f7ce1ac72780258d05a90c07deb5c724c0fa
   CapacitorCordova: 31ab98dca2ddcee051027a1afe7e8c85c82f7297
-  CapacitorLocalNotifications: 5827dfaf75a52f7d29ac3a56d92cfc52b5073540
-  JohnpcFinancekitCapacitor: ca9ad55d30d279abedf2b0a427b3babe29ab70d5
+  CapacitorLocalNotifications: 73765422be07829b2d0a4c7c22a77ea2252ca210
+  JohnpcFinancekitCapacitor: 071d13cca73d04a76eb9143da55772488042a0c6
 
 PODFILE CHECKSUM: 90cd720faa5cc0a3f8fb6ec12b78b184ed71d4b6
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

@@ -2,7 +2,6 @@ import { Button, Loader, Tabs, Text } from "@aws-amplify/ui-react";
 import BudgetPage from "./BudgetPage";
 import AccountsPage from "./AccountsPage";
 import SettingsPage from "./SettingsPage";
-import ChatPage from "./ChatPage";
 import { useEffect, useState } from "react";
 import {
   AccountEntity,
@@ -37,7 +36,6 @@ import {
   setCachedTransactionsForDate,
 } from "../data/cache";
 export default function TabsView() {
-  const [randomNumber, setRandomNumber] = useState(Math.random());
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [toggleListeners, setToggleListeners] = useState<boolean>(false);
   const [accounts, setAccounts] =
@@ -231,7 +229,6 @@ export default function TabsView() {
         spacing="equal"
         justifyContent="space-between"
         defaultValue="Budget"
-        onValueChange={() => setRandomNumber(Math.random())}
         items={[
           {
             label: "Budget",
@@ -258,11 +255,6 @@ export default function TabsView() {
                 settings={settings}
               />
             ),
-          },
-          {
-            label: "Chat",
-            value: "Chat",
-            content: <ChatPage user={user} randomNumber={randomNumber} />,
           },
           {
             label: "Settings",
