@@ -54,6 +54,31 @@ export default function BudgetPage() {
           })
         )
       );
+    } else {
+      // Create default categories for first-time users
+      const defaultCategories = [
+        { name: "Paycheck", type: "Income" },
+        { name: "Investing", type: "Saving" },
+        { name: "Housing", type: "Needs" },
+        { name: "Groceries", type: "Needs" },
+        { name: "Transport", type: "Needs" },
+        { name: "Entertainment", type: "Wants" },
+        { name: "Dining Out", type: "Wants" },
+        { name: "Shopping", type: "Wants" },
+        { name: "Misc", type: "Wants" },
+        { name: "Giving", type: "Wants" },
+      ];
+      
+      await Promise.all(
+        defaultCategories.map((cat) =>
+          client.models.BudgetCategory.create({
+            budgetBudgetCategoriesId: newBudget.data!.id,
+            name: cat.name,
+            type: cat.type as "Income" | "Saving" | "Needs" | "Wants",
+            plannedAmount: 0,
+          })
+        )
+      );
     }
 
     queryClient.invalidateQueries({ queryKey: ["budget"] });
