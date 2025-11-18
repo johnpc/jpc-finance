@@ -26,6 +26,8 @@
     "@johnpc/financekit-capacitor": "^0.0.3",
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
+    "@tanstack/react-query": "^5.90.10",
+    "@tanstack/react-query-devtools": "^5.90.2",
     "aws-amplify": "^6.11.0",
     "aws-lambda": "^1.0.7",
     "axios": "^1.6.8",

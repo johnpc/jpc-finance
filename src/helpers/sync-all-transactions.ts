@@ -2,7 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { syncPlaidTransactions } from "./plaid";
 import { syncTellerioTransactions } from "./sync-tellerio-transactions";
 import { syncFinanceKitTransactions } from "./sync-financekit-transactions";
-import { SettingsEntity } from "../data/entity";
+import { SettingsEntity } from "../lib/types";
 
 export const syncAllTransactions = async (
   date: Date,

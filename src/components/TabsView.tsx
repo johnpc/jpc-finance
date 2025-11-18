@@ -1,268 +1,44 @@
 import { Button, Loader, Tabs, Text } from "@aws-amplify/ui-react";
-import BudgetPage from "./BudgetPage";
-import AccountsPage from "./AccountsPage";
-import SettingsPage from "./SettingsPage";
-import { useEffect, useState } from "react";
-import {
-  AccountEntity,
-  BudgetEntity,
-  SettingsEntity,
-  TransactionEntity,
-  createAccountListener,
-  createBudgetCategoryListener,
-  createBudgetListener,
-  createSettingsListener,
-  createTransactionListener,
-  deleteBudgetCategoryListener,
-  getBudgetForDate,
-  getOrCreateSettings,
-  listAccounts,
-  listTransactions,
-  unsubscribeListener,
-  updateBudgetCategoryListener,
-  updateSettingsListener,
-  updateTransactionListener,
-} from "../data/entity";
-import { AuthUser, getCurrentUser } from "aws-amplify/auth";
-import { App, URLOpenListenerEvent } from "@capacitor/app";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import { addMonths, subMonths } from "date-fns";
-import {
-  getCachedAccounts,
-  getCachedBudgetForDate,
-  getCachedTransactionsForDate,
-  setAccountsCache,
-  setBudgetForDateCache,
-  setCachedTransactionsForDate,
-} from "../data/cache";
+import BudgetPage from "./BudgetPage/index";
+import AccountsPage from "./AccountsPage/index";
+import SettingsPage from "./SettingsPage/index";
+import { useBudget } from "../hooks/useBudget";
+import { useDate } from "../hooks/useDate";
+import { useAuth } from "../hooks/useAuth";
+
 export default function TabsView() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [toggleListeners, setToggleListeners] = useState<boolean>(false);
-  const [accounts, setAccounts] =
-    useState<AccountEntity[]>(getCachedAccounts());
-  const [settings, setSettings] = useState<SettingsEntity>();
-  const [user, setUser] = useState<AuthUser>();
-  const [date, setDate] = useState<Date>(new Date());
-  const [budget, setBudget] = useState<BudgetEntity | undefined>(
-    getCachedBudgetForDate(date),
-  );
-  const [transactions, setTransactions] = useState<TransactionEntity[]>(
-    getCachedTransactionsForDate(date) ?? [],
-  );
+  const { date, setDate } = useDate();
+  const { user } = useAuth();
+  const { data: budget, isLoading: budgetLoading } = useBudget(date);
 
-  const updateTransactions = async () => {
-    const transactions = await listTransactions(date);
-    console.log({ transactionsToUpdate: transactions });
-    setCachedTransactionsForDate(date, transactions);
-    setTransactions(transactions);
-  };
+  const dateLocaleString = date.toLocaleString(undefined, { month: "2-digit", year: "2-digit" });
+  const nowLocaleString = new Date().toLocaleString(undefined, { month: "2-digit", year: "2-digit" });
 
-  useEffect(() => {
-    const setup = async () => {
-      const updateBudget = async () => {
-        const budget = await getBudgetForDate(date);
-        console.log({ budgetToUpdate: budget });
-
-        if (budget) {
-          setBudgetForDateCache(date, budget);
-        }
-
-        setBudget(budget);
-        setIsLoading(false);
-      };
-
-      const updateAccounts = async () => {
-        const accounts = await listAccounts();
-        setAccountsCache(accounts);
-        setAccounts(accounts);
-      };
-
-      const updateUser = async () => {
-        const user = await getCurrentUser();
-        setUser(user);
-      };
-
-      const updateSettings = async () => {
-        const settings = await getOrCreateSettings();
-        setSettings(settings);
-      };
-      await Promise.all([
-        updateBudget(),
-        updateTransactions(),
-        updateAccounts(),
-        updateUser(),
-        updateSettings(),
-      ]);
-    };
-
-    setup();
-  }, [date]);
-
-  useEffect(() => {
-    const createBudgetSubscription = createBudgetListener(async () => {
-      const budget = await getBudgetForDate(date);
-      setBudget(budget);
-    });
-    const createBudgetCategorySubscription = createBudgetCategoryListener(
-      async () => {
-        const budget = await getBudgetForDate(date);
-        setBudget(budget);
-      },
-    );
-    const updateBudgetCategorySubscription = updateBudgetCategoryListener(
-      async () => {
-        const budget = await getBudgetForDate(date);
-        setBudget(budget);
-      },
-    );
-    const removeBudgetCategorySubscription = deleteBudgetCategoryListener(
-      async () => {
-        const budget = await getBudgetForDate(date);
-        setBudget(budget);
-      },
-    );
-    const createAccountSubscription = createAccountListener(
-      async (account: AccountEntity) => {
-        setAccounts([...accounts, account]);
-      },
-    );
-    const createTransactionSubscription = createTransactionListener(
-      async (transaction: TransactionEntity) => {
-        setTransactions([...transactions, transaction]);
-        setCachedTransactionsForDate(date, [...transactions, transaction]);
-      },
-    );
-    const updateTransactionSubscription = updateTransactionListener(
-      async (transaction: TransactionEntity) => {
-        const updatedTransactions = transactions.map((t) => {
-          if (t.id === transaction.id) {
-            return transaction;
-          }
-          return t;
-        });
-        setTransactions(updatedTransactions);
-        setCachedTransactionsForDate(date, updatedTransactions);
-        // updating transaction budget category requires budget update
-        const budget = await getBudgetForDate(date);
-        setBudget(budget);
-      },
-    );
-
-    const createSettingsSubscription = createSettingsListener(
-      async (settings: SettingsEntity) => {
-        setSettings(settings);
-      },
-    );
-    const updateSettingsSubscription = updateSettingsListener(
-      async (settings: SettingsEntity) => {
-        setSettings(settings);
-      },
-    );
-    App.addListener("appStateChange", async ({ isActive }) => {
-      if (isActive) {
-        setToggleListeners(!toggleListeners);
-      }
-    });
-    App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
-      const slug = event.url.split(".app").pop();
-      if (slug) {
-        console.log({ slug });
-      }
-    });
-    return () => {
-      unsubscribeListener(createSettingsSubscription);
-      unsubscribeListener(updateSettingsSubscription);
-      unsubscribeListener(createAccountSubscription);
-      unsubscribeListener(createBudgetSubscription);
-      unsubscribeListener(createBudgetCategorySubscription);
-      unsubscribeListener(updateBudgetCategorySubscription);
-      unsubscribeListener(removeBudgetCategorySubscription);
-      unsubscribeListener(createTransactionSubscription);
-      unsubscribeListener(updateTransactionSubscription);
-      App.removeAllListeners();
-    };
-  }, [date, user, budget, transactions, accounts, toggleListeners]);
-
-  const handleSubtractDate = async () => {
-    const day = subMonths(date, 1);
-    setDate(day);
-  };
-  const handleAddDate = async () => {
-    const day = addMonths(date, 1);
-    setDate(day);
-  };
-
-  if ((isLoading && !budget) || !user) return <Loader variation="linear" />;
-  const dateLocaleString = date.toLocaleString(undefined, {
-    month: "2-digit",
-    year: "2-digit",
-  });
-  const nowLocaleString = new Date().toLocaleString(undefined, {
-    month: "2-digit",
-    year: "2-digit",
-  });
+  if (budgetLoading && !budget) return <Loader variation="linear" />;
+  if (!user) return <Loader variation="linear" />;
 
   return (
     <>
-      <>
-        <Text as="div" textAlign={"center"}>
-          <ArrowBackIos
-            style={{ paddingTop: "10px" }}
-            onClick={handleSubtractDate}
-          />
-          <Text as="span" fontWeight={"bold"} margin={"15%"}>
-            {dateLocaleString}
-          </Text>
-          {dateLocaleString === nowLocaleString ? null : (
-            <ArrowForwardIos
-              style={{ paddingTop: "10px" }}
-              onClick={handleAddDate}
-            />
-          )}
-
-          {dateLocaleString === nowLocaleString ? null : (
+      <Text as="div" textAlign="center">
+        <ArrowBackIos style={{ paddingTop: "10px" }} onClick={() => setDate(subMonths(date, 1))} />
+        <Text as="span" fontWeight="bold" margin="15%">{dateLocaleString}</Text>
+        {dateLocaleString !== nowLocaleString && (
+          <>
+            <ArrowForwardIos style={{ paddingTop: "10px" }} onClick={() => setDate(addMonths(date, 1))} />
             <Button onClick={() => setDate(new Date())}>today</Button>
-          )}
-        </Text>
-      </>
+          </>
+        )}
+      </Text>
       <Tabs
         spacing="equal"
         justifyContent="space-between"
         defaultValue="Budget"
         items={[
-          {
-            label: "Budget",
-            value: "Budget",
-            content: (
-              <BudgetPage
-                accounts={accounts}
-                transactions={transactions}
-                updateTransactions={updateTransactions}
-                budget={budget}
-                date={date}
-                settings={settings}
-              />
-            ),
-          },
-          {
-            label: "Accounts",
-            value: "Accounts",
-            content: (
-              <AccountsPage
-                accounts={accounts}
-                transactions={transactions}
-                user={user}
-                settings={settings}
-              />
-            ),
-          },
-          {
-            label: "Settings",
-            value: "Settings",
-            content: (
-              <SettingsPage settings={settings} user={user} budget={budget} />
-            ),
-          },
+          { label: "Budget", value: "Budget", content: <BudgetPage /> },
+          { label: "Accounts", value: "Accounts", content: <AccountsPage /> },
+          { label: "Settings", value: "Settings", content: <SettingsPage /> },
         ]}
       />
     </>

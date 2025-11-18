@@ -1,8 +1,7 @@
 import { getCurrentUser } from "aws-amplify/auth";
 import config from "../../amplify_outputs.json";
-import { generateClient } from "aws-amplify/api";
+import { client } from "../lib/amplify-client";
 import { Schema } from "../../amplify/data/resource";
-const client = generateClient<Schema>();
 
 export const exchangePublicToken = async (
   publicToken: string,

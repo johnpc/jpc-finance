@@ -1,9 +1,6 @@
-import { generateClient } from "aws-amplify/api";
-import { Schema } from "../../amplify/data/resource";
+import { client } from "../lib/amplify-client";
 import config from "../../amplify_outputs.json";
 import { getCurrentUser } from "aws-amplify/auth";
-
-const client = generateClient<Schema>();
 export const syncTellerioTransactions = async (date: Date) => {
   const accessTokenResponse = await client.models.TellerAuthorization.list();
   if (!accessTokenResponse.data?.length) {

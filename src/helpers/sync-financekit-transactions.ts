@@ -1,10 +1,8 @@
-import { generateClient } from "aws-amplify/api";
+import { client } from "../lib/amplify-client";
 import { Schema } from "../../amplify/data/resource";
 import { getCurrentUser } from "aws-amplify/auth";
 import { JPCFinanceKit } from "@johnpc/financekit-capacitor";
 import { endOfMonth, subMonths } from "date-fns";
-
-const client = generateClient<Schema>();
 
 type FinanceKitTransaction = {
   id: string;
