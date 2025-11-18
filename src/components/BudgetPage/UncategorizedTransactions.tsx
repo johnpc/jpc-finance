@@ -16,7 +16,7 @@ function TransactionModal({ transaction, onClose }: { transaction: TransactionEn
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
+        zIndex: 10000,
       }}
       onClick={onClose}
     >
@@ -40,8 +40,7 @@ function TransactionModal({ transaction, onClose }: { transaction: TransactionEn
   );
 }
 
-function TransactionBubble({ transaction }: { transaction: TransactionEntity }) {
-  const [showModal, setShowModal] = useState(false);
+function TransactionBubble({ transaction, onShowModal }: { transaction: TransactionEntity; onShowModal: () => void }) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "TRANSACTION",
     item: { transaction },
@@ -51,60 +50,61 @@ function TransactionBubble({ transaction }: { transaction: TransactionEntity }) 
   const color = transaction.amount > 0 ? "#ffc107" : "#4caf50";
 
   return (
-    <>
+    <div
+      ref={drag}
+      onClick={onShowModal}
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        cursor: "move",
+        width: "100px",
+        height: "100px",
+        borderRadius: "50%",
+        backgroundColor: color,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "10px",
+        textAlign: "center",
+        fontSize: "11px",
+        fontWeight: "bold",
+        flexShrink: 0,
+      }}
+    >
       <div
-        ref={drag}
-        onClick={() => setShowModal(true)}
         style={{
-          opacity: isDragging ? 0.5 : 1,
-          cursor: "move",
-          width: "100px",
-          height: "100px",
-          borderRadius: "50%",
-          backgroundColor: color,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "10px",
-          textAlign: "center",
-          fontSize: "11px",
-          fontWeight: "bold",
-          flexShrink: 0,
+          overflow: "hidden",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          width: "80px",
+          lineHeight: "1.2",
+          marginBottom: "4px",
         }}
       >
-        <div
-          style={{
-            overflow: "hidden",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            width: "80px",
-            lineHeight: "1.2",
-            marginBottom: "4px",
-          }}
-        >
-          {transaction.name}
-        </div>
-        <div style={{ fontSize: "12px" }}>${(Math.abs(transaction.amount) / 100).toFixed(2)}</div>
+        {transaction.name}
       </div>
-      {showModal && <TransactionModal transaction={transaction} onClose={() => setShowModal(false)} />}
-    </>
+      <div style={{ fontSize: "12px" }}>${(Math.abs(transaction.amount) / 100).toFixed(2)}</div>
+    </div>
   );
 }
 
 export default function UncategorizedTransactions({ transactions }: { transactions: TransactionEntity[] }) {
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionEntity | null>(null);
   const uncategorized = transactions.filter((t) => !t.budgetCategoryId && !t.deleted);
 
   if (!uncategorized.length) return null;
 
   return (
-    <ScrollView position="fixed" bottom="0px" height="150px" width="100%" style={{ overflowX: "scroll", overflowY: "hidden" }}>
-      <Flex direction="row" gap="20px" padding="20px" wrap="nowrap">
-        {uncategorized.map((transaction) => (
-          <TransactionBubble key={transaction.id} transaction={transaction} />
-        ))}
-      </Flex>
-    </ScrollView>
+    <>
+      <ScrollView position="fixed" bottom="0px" height="150px" width="100%" style={{ overflowX: "scroll", overflowY: "hidden", zIndex: 100 }}>
+        <Flex direction="row" gap="20px" padding="20px" wrap="nowrap">
+          {uncategorized.map((transaction) => (
+            <TransactionBubble key={transaction.id} transaction={transaction} onShowModal={() => setSelectedTransaction(transaction)} />
+          ))}
+        </Flex>
+      </ScrollView>
+      {selectedTransaction && <TransactionModal transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} />}
+    </>
   );
 }
