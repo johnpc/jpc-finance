@@ -28,7 +28,9 @@ export default function BudgetTable({ budget, onClickCategory }: { budget: Budge
   return (
     <>
       {sections.map((section) => {
-        const categories = budget.budgetCategories.filter((c) => c.type === section.title);
+        const categories = budget.budgetCategories
+          .filter((c) => c.type === section.title)
+          .sort((a, b) => a.name.localeCompare(b.name));
         const sectionPlannedAmount = categories.reduce((acc, c) => acc + c.plannedAmount / 100, 0);
         const sectionSpentAmount = categories.reduce((acc, c) => acc + c.transactions.reduce((sum, t) => sum + t.amount, 0), 0) / 100;
         const moneyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
