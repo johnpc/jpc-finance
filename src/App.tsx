@@ -9,9 +9,10 @@ import { DndProvider } from "react-dnd";
 import { TouchBackend, TouchBackendOptions } from "react-dnd-touch-backend";
 import { MultiBackend, TouchTransition, MouseTransition, MultiBackendOptions } from "react-dnd-multi-backend";
 import { Preview, PreviewGenerator } from "react-dnd-preview";
+import { knightImage } from "./components/BudgetPage/knightImage";
 
 const generatePreview: PreviewGenerator = ({ style }) => (
-  <div className="item-list__item" style={style} />
+  <img style={style} src={knightImage} alt="dragging" />
 );
 
 const multiBackendOptions: MultiBackendOptions = {
