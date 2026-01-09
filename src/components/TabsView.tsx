@@ -1,11 +1,13 @@
 import { Button, Loader, Tabs, Text } from "@aws-amplify/ui-react";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import { addMonths, subMonths } from "date-fns";
-import BudgetPage from "./BudgetPage/index";
-import AccountsPage from "./AccountsPage/index";
-import SettingsPage from "./SettingsPage/index";
+import { lazy, Suspense } from "react";
 import { useDate } from "../hooks/useDateHook";
 import { useAuth } from "../hooks/useAuthHook";
+
+const BudgetPage = lazy(() => import("./BudgetPage/index"));
+const AccountsPage = lazy(() => import("./AccountsPage/index"));
+const SettingsPage = lazy(() => import("./SettingsPage/index"));
 
 export default function TabsView() {
   const { date, setDate } = useDate();
@@ -47,9 +49,33 @@ export default function TabsView() {
         justifyContent="space-between"
         defaultValue="Budget"
         items={[
-          { label: "Budget", value: "Budget", content: <BudgetPage /> },
-          { label: "Accounts", value: "Accounts", content: <AccountsPage /> },
-          { label: "Settings", value: "Settings", content: <SettingsPage /> },
+          {
+            label: "Budget",
+            value: "Budget",
+            content: (
+              <Suspense fallback={<Loader variation="linear" />}>
+                <BudgetPage />
+              </Suspense>
+            ),
+          },
+          {
+            label: "Accounts",
+            value: "Accounts",
+            content: (
+              <Suspense fallback={<Loader variation="linear" />}>
+                <AccountsPage />
+              </Suspense>
+            ),
+          },
+          {
+            label: "Settings",
+            value: "Settings",
+            content: (
+              <Suspense fallback={<Loader variation="linear" />}>
+                <SettingsPage />
+              </Suspense>
+            ),
+          },
         ]}
       />
     </>

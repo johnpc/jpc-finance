@@ -15,6 +15,15 @@ import { ErrorProvider } from "./contexts/ErrorContext";
 
 Amplify.configure(config);
 
+// Register service worker
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Service worker registration failed, app will work without offline support
+    });
+  });
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
