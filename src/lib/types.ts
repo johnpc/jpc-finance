@@ -1,5 +1,3 @@
-import { Schema } from "../../amplify/data/resource";
-
 export type TransactionEntity = {
   id: string;
   amount: number;
@@ -39,8 +37,3 @@ export type BudgetEntity = {
   budgetMonth: string;
   budgetCategories: BudgetCategoryEntity[];
 };
-
-export type SchemaTransaction = Schema["Transaction"]["type"];
-export type SchemaAccount = Schema["Account"]["type"];
-export type SchemaSettings = Schema["Settings"]["type"];
-export type SchemaBudgetCategory = Schema["BudgetCategory"]["type"];

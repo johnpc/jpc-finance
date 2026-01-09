@@ -17,13 +17,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
 import { useDate } from "../../hooks/useDateHook";
 import { useBudget } from "../../hooks/useBudget";
-import { SchemaBudgetCategory } from "../../lib/types";
 import SyncTransactionsButton from "./SyncTransactionsButton";
 import BudgetProgress from "./BudgetProgress";
 import BudgetTable from "./BudgetTable";
 import UncategorizedTransactions from "./UncategorizedTransactions";
 import CategoryDetail from "./CategoryDetail";
 import { useErrorHandler } from "../../hooks/useErrorHandler";
+import { fetchAllPages } from "../../lib/amplify-types";
 
 export default function BudgetPage() {
   const { date } = useDate();
@@ -55,24 +55,13 @@ export default function BudgetPage() {
       const newBudget = await client.models.Budget.create({ budgetMonth });
 
       if (mostRecentBudget) {
-        const allCategories: SchemaBudgetCategory[] = [];
-        let nextToken: string | null | undefined = null;
-
-        do {
-          const result: {
-            data: SchemaBudgetCategory[];
-            nextToken?: string | null;
-          } =
-            await client.models.BudgetCategory.listBudgetCategoryByBudgetBudgetCategoriesId(
-              {
-                budgetBudgetCategoriesId: mostRecentBudget.id,
-                // @ts-expect-error - nextToken is supported at runtime but not in types
-                nextToken,
-              },
-            );
-          allCategories.push(...result.data);
-          nextToken = result.nextToken;
-        } while (nextToken);
+        const allCategories = await fetchAllPages(
+          { budgetBudgetCategoriesId: mostRecentBudget.id },
+          (params) =>
+            client.models.BudgetCategory.listBudgetCategoryByBudgetBudgetCategoriesId(
+              params,
+            ),
+        );
 
         await Promise.all(
           allCategories.map((cat) =>

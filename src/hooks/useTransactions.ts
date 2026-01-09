@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAmplifyClient } from "./useAmplifyClient";
 import { TransactionEntity } from "../lib/types";
 import { queryKeys } from "../lib/queryKeys";
+import { fetchAllPages } from "../lib/amplify-types";
 
 export function useTransactions(date: Date) {
   const client = useAmplifyClient();
@@ -17,18 +18,11 @@ export function useTransactions(date: Date) {
       });
 
       // Fetch all transactions with pagination
-      const allTransactions = [];
-      let nextToken: string | null | undefined = null;
-      do {
-        const txResponse =
-          await client.models.Transaction.listTransactionByTransactionMonth({
-            transactionMonth,
-            // @ts-expect-error - nextToken is supported at runtime but not in types
-            nextToken,
-          });
-        allTransactions.push(...txResponse.data);
-        nextToken = txResponse.nextToken as string | null | undefined;
-      } while (nextToken);
+      const allTransactions = await fetchAllPages(
+        { transactionMonth },
+        (params) =>
+          client.models.Transaction.listTransactionByTransactionMonth(params),
+      );
 
       return allTransactions.map((t) => ({
         ...t,

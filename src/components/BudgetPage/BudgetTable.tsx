@@ -9,7 +9,7 @@ import {
   Text,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
 import { BudgetCategoryEntity } from "../../lib/types";
@@ -18,6 +18,8 @@ import { toDollars } from "../../lib/currency";
 import { useErrorHandler } from "../../hooks/useErrorHandler";
 import { useDate } from "../../hooks/useDateHook";
 import { useBudget } from "../../hooks/useBudget";
+import { EditModal } from "../EditModal";
+import { validators } from "../../lib/validation";
 
 export default function BudgetTable({
   onClickCategory,
@@ -30,6 +32,9 @@ export default function BudgetTable({
   const { withErrorHandling } = useErrorHandler();
   const { date } = useDate();
   const { data: budget } = useBudget(date);
+  const [creatingType, setCreatingType] = useState<
+    "Saving" | "Needs" | "Wants" | "Income" | null
+  >(null);
 
   if (!budget) return null;
 
@@ -45,16 +50,17 @@ export default function BudgetTable({
     { title: "Wants", subtitle: "Treat yo self" },
   ];
 
-  const createItem = async (type: "Saving" | "Needs" | "Wants" | "Income") => {
-    const name = prompt("Name?");
+  const createItem = async (name: string) => {
+    if (!creatingType) return;
     await withErrorHandling(async () => {
       await client.models.BudgetCategory.create({
         budgetBudgetCategoriesId: budget.id,
-        type,
-        name: name ?? "No name",
+        type: creatingType,
+        name,
         plannedAmount: 0,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
+      setCreatingType(null);
     }, "Failed to create category");
   };
 
@@ -135,7 +141,7 @@ export default function BudgetTable({
                   <TableCell
                     colSpan={2}
                     onClick={() =>
-                      createItem(
+                      setCreatingType(
                         section.title as
                           | "Saving"
                           | "Needs"
@@ -153,6 +159,16 @@ export default function BudgetTable({
         );
       })}
       <Divider style={{ marginBottom: "20px", marginTop: "20px" }} />
+      {creatingType && (
+        <EditModal
+          title={`Create ${creatingType} Category`}
+          label="Category Name"
+          initialValue=""
+          onSave={createItem}
+          onCancel={() => setCreatingType(null)}
+          validate={(name) => validators.categoryName(name).error || null}
+        />
+      )}
     </>
   );
 }

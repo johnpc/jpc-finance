@@ -11,6 +11,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import { DateProvider } from "./hooks/useDate";
 import { SubscriptionProvider } from "./providers/SubscriptionProvider";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AsyncErrorBoundary } from "./components/AsyncErrorBoundary";
 import { ErrorProvider } from "./contexts/ErrorContext";
 
 Amplify.configure(config);
@@ -33,6 +34,12 @@ const queryClient = new QueryClient({
       refetchOnReconnect: true, // Refetch on reconnect
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
+      onError: (error) => {
+        console.error("Mutation error:", error);
+      },
     },
   },
 });
@@ -59,15 +66,17 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ThemeProvider theme={theme}>
         <ErrorProvider>
           <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <DateProvider>
-                <SubscriptionProvider>
-                  <ErrorBoundary>
-                    <App />
-                  </ErrorBoundary>
-                </SubscriptionProvider>
-              </DateProvider>
-            </AuthProvider>
+            <AsyncErrorBoundary>
+              <AuthProvider>
+                <DateProvider>
+                  <SubscriptionProvider>
+                    <AsyncErrorBoundary>
+                      <App />
+                    </AsyncErrorBoundary>
+                  </SubscriptionProvider>
+                </DateProvider>
+              </AuthProvider>
+            </AsyncErrorBoundary>
             <ReactQueryDevtools initialIsOpen={false} />
           </QueryClientProvider>
         </ErrorProvider>

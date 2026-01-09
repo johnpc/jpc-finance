@@ -9,6 +9,7 @@ import { BudgetCategoryEntity, TransactionEntity } from "../../lib/types";
 import { EditModal } from "../EditModal";
 import { queryKeys } from "../../lib/queryKeys";
 import { toDollars, toCents } from "../../lib/currency";
+import { validators } from "../../lib/validation";
 
 export default function BudgetTableCategoryRow({
   category,
@@ -159,19 +160,16 @@ export default function BudgetTableCategoryRow({
     },
   });
 
-  const validateName = useCallback((name: string): string | null => {
-    if (!name.trim()) return "Name cannot be empty";
-    if (name.length > 50) return "Name must be 50 characters or less";
-    return null;
-  }, []);
+  const validateName = useCallback(
+    (name: string): string | null =>
+      validators.categoryName(name).error || null,
+    [],
+  );
 
-  const validateAmount = useCallback((amount: string): string | null => {
-    const num = parseFloat(amount);
-    if (isNaN(num)) return "Please enter a valid number";
-    if (num < 0) return "Amount cannot be negative";
-    if (num > 1000000) return "Amount must be less than $1,000,000";
-    return null;
-  }, []);
+  const validateAmount = useCallback(
+    (amount: string): string | null => validators.amount(amount).error || null,
+    [],
+  );
 
   const updateName = useCallback(
     async (name: string) => {
