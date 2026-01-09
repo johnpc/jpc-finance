@@ -34,19 +34,22 @@
 ## 🔥 High Priority
 
 ### Performance Optimization
-- [ ] ⏭️ **SKIPPED: Fix N+1 Query Problem** (useBudget.ts)
+- [x] ✅ **DONE: Fix N+1 Query Problem** (useBudget.ts)
   - Fetch all transactions for month at once
   - Group by category in memory instead of sequential queries
   - Location: `src/hooks/useBudget.ts` lines 40-65
   - Estimated impact: 10-20x faster budget loading
-  - **Reason skipped:** User decision
+  - Changed from 20+ sequential API calls to 3 API calls (budgets, categories, transactions)
+  - **Completed:** 2026-01-08
 
-- [ ] ⏭️ **SKIPPED: Implement Proper Pagination**
+- [x] ✅ **DONE: Implement Proper Pagination**
   - Remove hardcoded `limit: 10000`
   - Create reusable pagination utility
   - Handle `nextToken` properly across all queries
   - Locations: `useBudget.ts`, `useTransactions.ts`
-  - **Reason skipped:** User decision
+  - Implemented do-while loops to fetch all pages
+  - No more data loss at scale
+  - **Completed:** 2026-01-08
 
 - [x] ✅ **DONE: Add Request Deduplication**
   - Ensure React Query keys are consistent

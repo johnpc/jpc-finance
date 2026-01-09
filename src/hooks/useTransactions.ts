@@ -15,14 +15,22 @@ export function useTransactions(date: Date) {
         month: "2-digit",
         year: "2-digit",
       });
-      const response =
-        await client.models.Transaction.listTransactionByTransactionMonth({
-          transactionMonth,
-          // @ts-expect-error - limit is supported at runtime but not in types
-          limit: 10000,
-        });
 
-      return response.data.map((t) => ({
+      // Fetch all transactions with pagination
+      const allTransactions = [];
+      let nextToken: string | null | undefined = null;
+      do {
+        const txResponse =
+          await client.models.Transaction.listTransactionByTransactionMonth({
+            transactionMonth,
+            // @ts-expect-error - nextToken is supported at runtime but not in types
+            nextToken,
+          });
+        allTransactions.push(...txResponse.data);
+        nextToken = txResponse.nextToken as string | null | undefined;
+      } while (nextToken);
+
+      return allTransactions.map((t) => ({
         ...t,
         amount: t.amount * -1,
         deleted: t.deleted ?? false,

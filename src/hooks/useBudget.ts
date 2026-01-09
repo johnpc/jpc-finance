@@ -19,55 +19,93 @@ export function useBudget(date: Date) {
         month: "2-digit",
         year: "2-digit",
       });
-      const response = await client.models.Budget.listBudgetByBudgetMonth({
-        budgetMonth,
-        // @ts-expect-error - limit is supported at runtime but not in types
-        limit: 10000,
+
+      // Fetch all budgets with pagination
+      const allBudgets = [];
+      let budgetNextToken: string | null | undefined = null;
+      do {
+        const budgetResponse =
+          await client.models.Budget.listBudgetByBudgetMonth({
+            budgetMonth,
+            // @ts-expect-error - nextToken is supported at runtime but not in types
+            nextToken: budgetNextToken,
+          });
+        allBudgets.push(...budgetResponse.data);
+        budgetNextToken = budgetResponse.nextToken as string | null | undefined;
+      } while (budgetNextToken);
+
+      if (!allBudgets.length) return null;
+
+      const budget = allBudgets[0];
+
+      // Fetch all categories with pagination
+      const allCategories = [];
+      let categoryNextToken: string | null | undefined = null;
+      do {
+        const categoryResponse =
+          await client.models.BudgetCategory.listBudgetCategoryByBudgetBudgetCategoriesId(
+            {
+              budgetBudgetCategoriesId: budget.id,
+              // @ts-expect-error - nextToken is supported at runtime but not in types
+              nextToken: categoryNextToken,
+            },
+          );
+        allCategories.push(...categoryResponse.data);
+        categoryNextToken = categoryResponse.nextToken as
+          | string
+          | null
+          | undefined;
+      } while (categoryNextToken);
+
+      // Fetch ALL transactions for the month at once (fixes N+1 problem)
+      const transactionMonth = date.toLocaleDateString(undefined, {
+        month: "2-digit",
+        year: "2-digit",
       });
-      console.log("Current user budgets:", response.data);
+      const allTransactions = [];
+      let transactionNextToken: string | null | undefined = null;
+      do {
+        const txResponse =
+          await client.models.Transaction.listTransactionByTransactionMonth({
+            transactionMonth,
+            // @ts-expect-error - nextToken is supported at runtime but not in types
+            nextToken: transactionNextToken,
+          });
+        allTransactions.push(...txResponse.data);
+        transactionNextToken = txResponse.nextToken as
+          | string
+          | null
+          | undefined;
+      } while (transactionNextToken);
 
-      if (!response.data?.length) return null;
+      // Group transactions by category in memory
+      const transactionsByCategory = new Map<string, TransactionEntity[]>();
+      for (const t of allTransactions) {
+        if (!t.budgetCategoryTransactionsId) continue;
 
-      const budget = response.data[0];
-      console.log("Fetching categories for budget:", budget.id);
-      const categoriesResponse =
-        await client.models.BudgetCategory.listBudgetCategoryByBudgetBudgetCategoriesId(
-          {
-            budgetBudgetCategoriesId: budget.id,
-            // @ts-expect-error - limit is supported at runtime but not in types
-            limit: 10000,
-          },
-        );
-      console.log("Categories response:", categoriesResponse.data);
+        const transaction: TransactionEntity = {
+          ...t,
+          amount: t.amount * -1,
+          deleted: t.deleted ?? false,
+          date: new Date(t.date),
+          budgetCategoryId: t.budgetCategoryTransactionsId,
+        };
 
-      const budgetCategories = await Promise.all(
-        categoriesResponse.data.map(
-          async (category): Promise<BudgetCategoryEntity> => {
-            const transactionsResponse =
-              await client.models.Transaction.listTransactionByBudgetCategoryTransactionsId(
-                {
-                  budgetCategoryTransactionsId: category.id,
-                  // @ts-expect-error - limit is supported at runtime but not in types
-                  limit: 10000,
-                },
-              );
+        if (!transactionsByCategory.has(t.budgetCategoryTransactionsId)) {
+          transactionsByCategory.set(t.budgetCategoryTransactionsId, []);
+        }
+        transactionsByCategory
+          .get(t.budgetCategoryTransactionsId)!
+          .push(transaction);
+      }
 
-            const transactions: TransactionEntity[] =
-              transactionsResponse.data.map((t) => ({
-                ...t,
-                amount: t.amount * -1,
-                deleted: t.deleted ?? false,
-                date: new Date(t.date),
-                budgetCategoryId: t.budgetCategoryTransactionsId,
-              }));
-
-            return {
-              ...category,
-              type: category.type as "Saving" | "Needs" | "Wants" | "Income",
-              transactions,
-            };
-          },
-        ),
+      // Map categories with their transactions
+      const budgetCategories: BudgetCategoryEntity[] = allCategories.map(
+        (category) => ({
+          ...category,
+          type: category.type as "Saving" | "Needs" | "Wants" | "Income",
+          transactions: transactionsByCategory.get(category.id) || [],
+        }),
       );
 
       return { ...budget, budgetCategories };
