@@ -1,14 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import { AuthUser, getCurrentUser, signOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
-
-interface AuthContextType {
-  user: AuthUser | null;
-  isLoading: boolean;
-  signOut: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from "../contexts/AuthContext";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -41,10 +34,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
 }

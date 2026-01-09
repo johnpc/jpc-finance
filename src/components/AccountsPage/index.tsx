@@ -7,7 +7,7 @@ import { Capacitor } from "@capacitor/core";
 import { JPCFinanceKit } from "@johnpc/financekit-capacitor";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
-import { useDate } from "../../hooks/useDate";
+import { useDate } from "../../hooks/useDateHook";
 import { useSettings } from "../../hooks/useSettings";
 import { createLinkToken, exchangePublicToken } from "../../helpers/plaid";
 import { syncAllTransactions } from "../../helpers/sync-all-transactions";
@@ -27,7 +27,10 @@ export default function AccountsPage() {
     onSuccess: async (authorization: { accessToken: string }) => {
       setSyncing(true);
       const user = await getCurrentUser();
-      await client.models.TellerAuthorization.create({ accessToken: authorization.accessToken, amplifyUserId: user.userId });
+      await client.models.TellerAuthorization.create({
+        accessToken: authorization.accessToken,
+        amplifyUserId: user.userId,
+      });
       await syncAllTransactions(date, settings);
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -35,13 +38,16 @@ export default function AccountsPage() {
     },
   });
 
-  const onPlaidSuccess = useCallback(async (publicToken: string) => {
-    setSyncing(true);
-    await exchangePublicToken(publicToken);
-    queryClient.invalidateQueries({ queryKey: ["accounts"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    setSyncing(false);
-  }, [queryClient]);
+  const onPlaidSuccess = useCallback(
+    async (publicToken: string) => {
+      setSyncing(true);
+      await exchangePublicToken(publicToken);
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      setSyncing(false);
+    },
+    [queryClient],
+  );
 
   const plaidLink = usePlaidLink({
     token: plaidToken,
@@ -54,12 +60,18 @@ export default function AccountsPage() {
 
   const handleAddAccountViaFinanceKit = async () => {
     await JPCFinanceKit.requestAuthorization();
-    await client.models.Settings.update({ id: settings!.id, enableFinanceKit: true });
+    await client.models.Settings.update({
+      id: settings!.id,
+      enableFinanceKit: true,
+    });
     queryClient.invalidateQueries({ queryKey: ["settings"] });
   };
 
   const handleRemoveFinanceKit = async () => {
-    await client.models.Settings.update({ id: settings!.id, enableFinanceKit: false });
+    await client.models.Settings.update({
+      id: settings!.id,
+      enableFinanceKit: false,
+    });
     queryClient.invalidateQueries({ queryKey: ["settings"] });
   };
 
@@ -72,16 +84,30 @@ export default function AccountsPage() {
         Link Account via Teller
       </Button>
       <Divider style={{ marginBottom: "20px", marginTop: "20px" }} />
-      <Button isFullWidth variation="primary" colorTheme="info" onClick={() => plaidLink.open()} disabled={!plaidLink.ready}>
+      <Button
+        isFullWidth
+        variation="primary"
+        colorTheme="info"
+        onClick={() => plaidLink.open()}
+        disabled={!plaidLink.ready}
+      >
         Link Account via Plaid
       </Button>
       {Capacitor.getPlatform() === "ios" && (
         <>
           <Divider margin="20px" />
           {settings?.enableFinanceKit ? (
-            <Button onClick={handleRemoveFinanceKit} isFullWidth>Unlink FinanceKit</Button>
+            <Button onClick={handleRemoveFinanceKit} isFullWidth>
+              Unlink FinanceKit
+            </Button>
           ) : (
-            <Button disabled={!settings} onClick={handleAddAccountViaFinanceKit} isFullWidth>Link FinanceKit</Button>
+            <Button
+              disabled={!settings}
+              onClick={handleAddAccountViaFinanceKit}
+              isFullWidth
+            >
+              Link FinanceKit
+            </Button>
           )}
         </>
       )}

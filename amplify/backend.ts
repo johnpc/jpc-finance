@@ -1,5 +1,8 @@
 import { defineBackend, defineFunction } from "@aws-amplify/backend";
-import { Function, FunctionUrlAuthType } from "aws-cdk-lib/aws-lambda";
+import {
+  Function as LambdaFunction,
+  FunctionUrlAuthType,
+} from "aws-cdk-lib/aws-lambda";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { storage } from "./storage/resource";
@@ -37,24 +40,32 @@ const backend = defineBackend({
   storage,
 });
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-const underlyingAuthLambda = backend.authFunction.resources.lambda as Function;
+const underlyingAuthLambda = backend.authFunction.resources
+  .lambda as LambdaFunction;
 underlyingAuthLambda.addEnvironment(
   "ADMIN_API_KEY",
   process.env.ADMIN_API_KEY!,
 );
 
-const outputs = {} as { [key: string]: string };
-[
-  { name: "helloWorldFunction" },
-  { name: "tellerioListTransactionsFunction" },
-  { name: "plaidCreateLinkTokenFunction" },
-  { name: "plaidExchangePublicTokenFunction" },
-  { name: "plaidListTransactionsFunction" },
-].forEach((functionInfo) => {
-  const underlyingLambda =
-    // eslint-disable-next-line
-    (backend as any)[functionInfo.name].resources.lambda as Function;
+const outputs: Record<string, string> = {};
+const functions = [
+  backend.helloWorldFunction,
+  backend.tellerioListTransactionsFunction,
+  backend.plaidCreateLinkTokenFunction,
+  backend.plaidExchangePublicTokenFunction,
+  backend.plaidListTransactionsFunction,
+];
+
+functions.forEach((fn, index) => {
+  const functionNames = [
+    "helloWorldFunction",
+    "tellerioListTransactionsFunction",
+    "plaidCreateLinkTokenFunction",
+    "plaidExchangePublicTokenFunction",
+    "plaidListTransactionsFunction",
+  ];
+
+  const underlyingLambda = fn.resources.lambda as LambdaFunction;
   underlyingLambda.addEnvironment("ADMIN_API_KEY", process.env.ADMIN_API_KEY!);
   underlyingLambda.addEnvironment("PLAID_SECRET", process.env.PLAID_SECRET!);
   underlyingLambda.addEnvironment(
@@ -74,7 +85,7 @@ const outputs = {} as { [key: string]: string };
       allowedHeaders: ["*"],
     },
   });
-  outputs[functionInfo.name] = functionUrl.url;
+  outputs[functionNames[index]] = functionUrl.url;
 });
 backend.addOutput({
   custom: outputs,

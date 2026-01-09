@@ -1,4 +1,4 @@
-import { useAuth } from "./useAuth";
+import { useAuth } from "./useAuthHook";
 import { client, publicClient } from "../lib/amplify-client";
 
 export function useAmplifyClient() {

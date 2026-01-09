@@ -78,8 +78,15 @@
       "prettier --write",
       "eslint --cache --fix"
     ],
+    "*.tsx": [
+      "prettier --write",
+      "eslint --cache --fix"
+    ],
     "*.json": "prettier --write",
     "*.yml": "prettier --write",
     "*.md": "prettier --write"
-  }
+  },
+  "pre-commit": [
+    "npm run build"
+  ]
 }

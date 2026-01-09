@@ -1,9 +1,17 @@
-import { AccountSettings, Button, Card, Divider, Heading, Text, useTheme } from "@aws-amplify/ui-react";
+import {
+  AccountSettings,
+  Button,
+  Card,
+  Divider,
+  Heading,
+  Text,
+  useTheme,
+} from "@aws-amplify/ui-react";
 import { LocalNotifications, Weekday } from "@capacitor/local-notifications";
 import { Capacitor } from "@capacitor/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../../hooks/useAuth";
-import { useDate } from "../../hooks/useDate";
+import { useAuth } from "../../hooks/useAuthHook";
+import { useDate } from "../../hooks/useDateHook";
 import { useBudget } from "../../hooks/useBudget";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
 import SignOutButton from "./SignOutButton";
@@ -22,7 +30,10 @@ export default function SettingsPage() {
     if (!budget) return;
     const promises = budget.budgetCategories.map(async (category) => {
       const promises = category.transactions.map((transaction) =>
-        client.models.Transaction.update({ id: transaction.id, budgetCategoryTransactionsId: null })
+        client.models.Transaction.update({
+          id: transaction.id,
+          budgetCategoryTransactionsId: null,
+        }),
       );
       await Promise.all(promises);
     });
@@ -39,7 +50,10 @@ export default function SettingsPage() {
           title: "Update your budget",
           body: "Time to categorize your transactions for the week",
           id: 13,
-          schedule: { allowWhileIdle: true, on: { weekday: Weekday.Friday, hour: 13 } },
+          schedule: {
+            allowWhileIdle: true,
+            on: { weekday: Weekday.Friday, hour: 13 },
+          },
         },
       ],
     });
@@ -71,7 +85,8 @@ export default function SettingsPage() {
             Reset Budget
           </Button>
           <Text fontSize="xs" as="p">
-            This will uncategorize all transactions for the month in case you'd like to recategorize everything.
+            This will uncategorize all transactions for the month in case you'd
+            like to recategorize everything.
           </Text>
         </>
       )}

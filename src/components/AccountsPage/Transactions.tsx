@@ -1,5 +1,11 @@
-import { Table, TableBody, TableCell, TableHead, TableRow } from "@aws-amplify/ui-react";
-import { useDate } from "../../hooks/useDate";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from "@aws-amplify/ui-react";
+import { useDate } from "../../hooks/useDateHook";
 import { useTransactions } from "../../hooks/useTransactions";
 
 export default function Transactions() {
