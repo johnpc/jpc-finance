@@ -1,3 +1,4 @@
+import { queryKeys } from "../../lib/queryKeys";
 import {
   AccountSettings,
   Button,
@@ -15,6 +16,7 @@ import { useDate } from "../../hooks/useDateHook";
 import { useBudget } from "../../hooks/useBudget";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
 import SignOutButton from "./SignOutButton";
+import { useErrorHandler } from "../../hooks/useErrorHandler";
 
 export default function SettingsPage() {
   const { tokens } = useTheme();
@@ -23,40 +25,45 @@ export default function SettingsPage() {
   const { data: budget } = useBudget(date);
   const client = useAmplifyClient();
   const queryClient = useQueryClient();
+  const { withErrorHandling } = useErrorHandler();
 
   const handleSuccess = () => alert("success!");
 
   const onResetBudget = async () => {
     if (!budget) return;
-    const promises = budget.budgetCategories.map(async (category) => {
-      const promises = category.transactions.map((transaction) =>
-        client.models.Transaction.update({
-          id: transaction.id,
-          budgetCategoryTransactionsId: null,
-        }),
-      );
+    await withErrorHandling(async () => {
+      const promises = budget.budgetCategories.map(async (category) => {
+        const promises = category.transactions.map((transaction) =>
+          client.models.Transaction.update({
+            id: transaction.id,
+            budgetCategoryTransactionsId: null,
+          }),
+        );
+        await Promise.all(promises);
+      });
       await Promise.all(promises);
-    });
-    await Promise.all(promises);
-    queryClient.invalidateQueries({ queryKey: ["budget"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["budget"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.allTransactions() });
+    }, "Failed to reset budget");
   };
 
   const onSetupNotifications = async () => {
-    await LocalNotifications.requestPermissions();
-    await LocalNotifications.schedule({
-      notifications: [
-        {
-          title: "Update your budget",
-          body: "Time to categorize your transactions for the week",
-          id: 13,
-          schedule: {
-            allowWhileIdle: true,
-            on: { weekday: Weekday.Friday, hour: 13 },
+    await withErrorHandling(async () => {
+      await LocalNotifications.requestPermissions();
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: "Update your budget",
+            body: "Time to categorize your transactions for the week",
+            id: 13,
+            schedule: {
+              allowWhileIdle: true,
+              on: { weekday: Weekday.Friday, hour: 13 },
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
+    }, "Failed to setup notifications");
   };
 
   return (

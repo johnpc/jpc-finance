@@ -5,12 +5,15 @@ import {
   BudgetCategoryEntity,
   TransactionEntity,
 } from "../lib/types";
+import { queryKeys } from "../lib/queryKeys";
 
 export function useBudget(date: Date) {
   const client = useAmplifyClient();
 
   return useQuery({
-    queryKey: ["budget", date.toISOString()],
+    queryKey: queryKeys.budget(date),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
     queryFn: async (): Promise<BudgetEntity | null> => {
       const budgetMonth = date.toLocaleDateString(undefined, {
         month: "2-digit",

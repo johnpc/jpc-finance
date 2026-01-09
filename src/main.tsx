@@ -18,8 +18,10 @@ Amplify.configure(config);
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60, // 1 minute default
+      gcTime: 1000 * 60 * 5, // 5 minutes default (formerly cacheTime)
+      refetchOnWindowFocus: true, // Enable stale-while-revalidate on focus
+      refetchOnReconnect: true, // Refetch on reconnect
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },

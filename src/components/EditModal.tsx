@@ -3,6 +3,7 @@ import {
   Flex,
   Heading,
   Input,
+  Loader,
   Text,
   useTheme,
 } from "@aws-amplify/ui-react";
@@ -12,7 +13,7 @@ interface EditModalProps {
   title: string;
   label: string;
   initialValue: string;
-  onSave: (value: string) => void;
+  onSave: (value: string) => Promise<void>;
   onCancel: () => void;
   validate?: (value: string) => string | null;
   type?: "text" | "number";
@@ -30,14 +31,20 @@ export function EditModal({
   const { tokens } = useTheme();
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const validationError = validate?.(value);
     if (validationError) {
       setError(validationError);
       return;
     }
-    onSave(value);
+    setSaving(true);
+    try {
+      await onSave(value);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -51,7 +58,7 @@ export function EditModal({
       justifyContent="center"
       alignItems="center"
       style={{ zIndex: 1000 }}
-      onClick={onCancel}
+      onClick={saving ? undefined : onCancel}
     >
       <Flex
         direction="column"
@@ -74,19 +81,20 @@ export function EditModal({
             }}
             hasError={!!error}
             autoFocus
+            disabled={saving}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleSave();
-              if (e.key === "Escape") onCancel();
+              if (e.key === "Enter" && !saving) handleSave();
+              if (e.key === "Escape" && !saving) onCancel();
             }}
           />
           {error && <Text color={tokens.colors.red[60]}>{error}</Text>}
         </Flex>
         <Flex gap="0.5rem" justifyContent="flex-end">
-          <Button onClick={onCancel} variation="link">
+          <Button onClick={onCancel} variation="link" disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} variation="primary">
-            Save
+          <Button onClick={handleSave} variation="primary" disabled={saving}>
+            {saving ? <Loader size="small" /> : "Save"}
           </Button>
         </Flex>
       </Flex>

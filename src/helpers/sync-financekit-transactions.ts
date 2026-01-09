@@ -3,6 +3,7 @@ import { Schema } from "../../amplify/data/resource";
 import { getCurrentUser } from "aws-amplify/auth";
 import { JPCFinanceKit } from "@johnpc/financekit-capacitor";
 import { endOfMonth, subMonths } from "date-fns";
+import { toCents } from "../lib/currency";
 
 type FinanceKitTransaction = {
   id: string;
@@ -51,7 +52,7 @@ const syncTransactions = async (
       return financeKitTransaction.date >= lastMonth.getTime() / 1000;
     })
     .map((financeKitTransaction: FinanceKitTransaction) => ({
-      amount: Math.floor(+financeKitTransaction.amount * 100 * -1),
+      amount: toCents(+financeKitTransaction.amount * -1),
       transactionMonth: new Date(
         financeKitTransaction.date * 1000,
       ).toLocaleDateString(undefined, { month: "2-digit", year: "2-digit" }),

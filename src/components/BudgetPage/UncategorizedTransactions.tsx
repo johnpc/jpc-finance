@@ -2,8 +2,17 @@ import { ScrollView, Flex, Button, Heading, Text } from "@aws-amplify/ui-react";
 import { useState } from "react";
 import { useDrag } from "react-dnd";
 import { TransactionEntity } from "../../lib/types";
+import { toDollars } from "../../lib/currency";
+import { useDate } from "../../hooks/useDateHook";
+import { useTransactions } from "../../hooks/useTransactions";
 
-function TransactionModal({ transaction, onClose }: { transaction: TransactionEntity; onClose: () => void }) {
+function TransactionModal({
+  transaction,
+  onClose,
+}: {
+  transaction: TransactionEntity;
+  onClose: () => void;
+}) {
   return (
     <div
       style={{
@@ -31,16 +40,26 @@ function TransactionModal({ transaction, onClose }: { transaction: TransactionEn
         onClick={(e) => e.stopPropagation()}
       >
         <Heading level={4}>{transaction.name}</Heading>
-        <Text>Amount: ${(Math.abs(transaction.amount) / 100).toFixed(2)}</Text>
+        <Text>
+          Amount: ${Math.abs(toDollars(transaction.amount)).toFixed(2)}
+        </Text>
         <Text>Date: {transaction.date.toLocaleDateString()}</Text>
         <Text>Status: {transaction.pending ? "Pending" : "Posted"}</Text>
-        <Button onClick={onClose} marginTop="20px">Close</Button>
+        <Button onClick={onClose} marginTop="20px">
+          Close
+        </Button>
       </div>
     </div>
   );
 }
 
-function TransactionBubble({ transaction, onShowModal }: { transaction: TransactionEntity; onShowModal: () => void }) {
+function TransactionBubble({
+  transaction,
+  onShowModal,
+}: {
+  transaction: TransactionEntity;
+  onShowModal: () => void;
+}) {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "TRANSACTION",
     item: { transaction },
@@ -84,27 +103,49 @@ function TransactionBubble({ transaction, onShowModal }: { transaction: Transact
       >
         {transaction.name}
       </div>
-      <div style={{ fontSize: "12px" }}>${(Math.abs(transaction.amount) / 100).toFixed(2)}</div>
+      <div style={{ fontSize: "12px" }}>
+        ${Math.abs(toDollars(transaction.amount)).toFixed(2)}
+      </div>
     </div>
   );
 }
 
-export default function UncategorizedTransactions({ transactions }: { transactions: TransactionEntity[] }) {
-  const [selectedTransaction, setSelectedTransaction] = useState<TransactionEntity | null>(null);
-  const uncategorized = transactions.filter((t) => !t.budgetCategoryId && !t.deleted);
+export default function UncategorizedTransactions() {
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionEntity | null>(null);
+  const { date } = useDate();
+  const { data: transactions = [] } = useTransactions(date);
+  const uncategorized = transactions.filter(
+    (t) => !t.budgetCategoryId && !t.deleted,
+  );
 
   if (!uncategorized.length) return null;
 
   return (
     <>
-      <ScrollView position="fixed" bottom="0px" height="150px" width="100%" style={{ overflowX: "scroll", overflowY: "hidden", zIndex: 100 }}>
+      <ScrollView
+        position="fixed"
+        bottom="0px"
+        height="150px"
+        width="100%"
+        style={{ overflowX: "scroll", overflowY: "hidden", zIndex: 100 }}
+      >
         <Flex direction="row" gap="20px" padding="20px" wrap="nowrap">
           {uncategorized.map((transaction) => (
-            <TransactionBubble key={transaction.id} transaction={transaction} onShowModal={() => setSelectedTransaction(transaction)} />
+            <TransactionBubble
+              key={transaction.id}
+              transaction={transaction}
+              onShowModal={() => setSelectedTransaction(transaction)}
+            />
           ))}
         </Flex>
       </ScrollView>
-      {selectedTransaction && <TransactionModal transaction={selectedTransaction} onClose={() => setSelectedTransaction(null)} />}
+      {selectedTransaction && (
+        <TransactionModal
+          transaction={selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
+        />
+      )}
     </>
   );
 }

@@ -3,63 +3,71 @@
 ## 🚨 Critical Priority
 
 ### Security Issues
-- [ ] **Fix Function URL Authentication** (backend.ts)
+- [ ] ⏭️ **SKIPPED: Fix Function URL Authentication** (backend.ts)
   - Change `FunctionUrlAuthType.NONE` to `FunctionUrlAuthType.AWS_IAM`
   - Restrict CORS to specific frontend URL instead of `["*"]`
   - Add proper authentication headers
   - Location: `amplify/backend.ts` lines 78-82
+  - **Reason skipped:** Requires frontend auth changes
 
-- [ ] **Add Input Validation**
+- [x] ✅ **DONE: Add Input Validation**
   - Replace `prompt()` calls with proper modals
   - Add validation for user inputs (category names, amounts)
   - Sanitize all user-provided data
   - Location: `BudgetTableCategoryRow.tsx` lines 24-36
+  - **Completed:** 2026-01-08
 
 ### Error Handling
-- [ ] **Add Error Boundaries**
+- [x] ✅ **DONE: Add Error Boundaries**
   - Create `ErrorBoundary` component
   - Wrap main app sections
   - Add error fallback UI
   - Log errors to monitoring service
+  - **Completed:** 2026-01-08
 
-- [ ] **Add Global Error Handler**
+- [x] ✅ **DONE: Add Global Error Handler**
   - Centralized error reporting
-  - User-friendly error messages
+  - User-friendly error messages (toast notifications)
   - Retry mechanisms for failed requests
+  - **Completed:** 2026-01-08
 
 ## 🔥 High Priority
 
 ### Performance Optimization
-- [ ] **Fix N+1 Query Problem** (useBudget.ts)
+- [ ] ⏭️ **SKIPPED: Fix N+1 Query Problem** (useBudget.ts)
   - Fetch all transactions for month at once
   - Group by category in memory instead of sequential queries
   - Location: `src/hooks/useBudget.ts` lines 40-65
   - Estimated impact: 10-20x faster budget loading
+  - **Reason skipped:** User decision
 
-- [ ] **Implement Proper Pagination**
+- [ ] ⏭️ **SKIPPED: Implement Proper Pagination**
   - Remove hardcoded `limit: 10000`
   - Create reusable pagination utility
   - Handle `nextToken` properly across all queries
   - Locations: `useBudget.ts`, `useTransactions.ts`
+  - **Reason skipped:** User decision
 
-- [ ] **Add Request Deduplication**
+- [x] ✅ **DONE: Add Request Deduplication**
   - Ensure React Query keys are consistent
   - Prevent duplicate API calls
   - Add request caching strategy
+  - **Completed:** 2026-01-08
 
 ### User Experience
-- [ ] **Add Loading States**
+- [x] ✅ **DONE: Add Loading States**
   - Show spinners during mutations
   - Disable buttons while processing
   - Add skeleton loaders for data fetching
   - Locations: `BudgetTableCategoryRow.tsx`, `CategoryDetail.tsx`
+  - **Completed:** 2026-01-08
 
-- [ ] **Add Optimistic Updates**
+- [x] ✅ **DONE: Add Optimistic Updates**
   - Update UI immediately on user action
   - Rollback on error
   - Improve perceived performance
-
-- [ ] **Replace prompt() with Modals**
+  - Implemented for: category rename, amount update, delete, transaction categorization/uncategorization
+  - **Completed:** 2026-01-08
   - Create reusable modal components
   - Add proper form validation
   - Better UX for editing categories
@@ -67,50 +75,66 @@
 ## 📊 Medium Priority
 
 ### Code Quality
-- [ ] **Fix Memory Leak in Subscriptions**
+- [x] ✅ **DONE: Fix Memory Leak in Subscriptions**
   - Use `useRef` to track subscription state
   - Prevent recreation on every user change
   - Location: `SubscriptionProvider.tsx`
+  - **Completed:** 2026-01-08
 
-- [ ] **Add Memoization**
+- [x] ✅ **DONE: Add Memoization**
   - Memoize expensive calculations in `BudgetTableCategoryRow`
   - Use `useMemo` for derived state
   - Use `useCallback` for event handlers
   - Location: `BudgetTableCategoryRow.tsx` lines 44-49
+  - **Completed:** 2026-01-08
 
-- [ ] **Extract Magic Numbers**
+- [x] ✅ **DONE: Extract Magic Numbers**
   - Create constants file for `CENTS_TO_DOLLARS = 100`
   - Document why amounts are stored as integers
   - Add type-safe currency utilities
+  - Created `src/lib/currency.ts` with `toDollars`, `toCents`, and `formatCurrency`
+  - **Completed:** 2026-01-08
 
-- [ ] **Consistent Error Handling**
+- [x] ✅ **DONE: Consistent Error Handling**
   - Add try/catch to all async operations
   - Standardize error response format
   - Add error logging
+  - Wrapped all async operations with `withErrorHandling`
+  - **Completed:** 2026-01-08
 
 ### Architecture
-- [ ] **Add Stale-While-Revalidate**
-  - Configure React Query `staleTime` and `cacheTime`
+- [x] ✅ **DONE: Add Stale-While-Revalidate**
+  - Configure React Query `staleTime` and `gcTime`
   - Improve offline experience
   - Reduce unnecessary refetches
+  - Budget/Transactions: 2min stale, 10min cache
+  - Accounts: 5min stale, 15min cache
+  - Settings: 10min stale, 30min cache
+  - **Completed:** 2026-01-08
 
-- [ ] **Add Request Retry Logic**
+- [x] ✅ **DONE: Add Request Retry Logic**
   - Implement exponential backoff
   - Configure retry attempts per query type
   - Handle network failures gracefully
+  - Already implemented: 3 retries with exponential backoff (max 30s delay)
+  - **Completed:** Previously (verified 2026-01-08)
 
-- [ ] **Reduce Prop Drilling**
+- [x] ✅ **DONE: Reduce Prop Drilling**
   - Use context for `queryClient` and `client`
   - Create custom hooks for common patterns
   - Simplify component props
+  - Removed props from: SyncTransactionsButton, BudgetProgress, BudgetTable, UncategorizedTransactions
+  - Components now use hooks directly (useDate, useBudget, useTransactions, useSettings)
+  - **Completed:** 2026-01-08
 
 ## 🎨 Low Priority
 
 ### Performance
-- [ ] **Code Splitting**
+- [ ] ⏭️ **SKIPPED: Code Splitting**
   - Split by route
   - Lazy load heavy components (DND, charts)
-  - Reduce initial bundle size (currently 984KB)
+  - Reduce initial bundle size (currently 994KB)
+  - **Reason skipped:** User decision
 
 - [ ] **Optimize Bundle Size**
   - Remove unused MUI components

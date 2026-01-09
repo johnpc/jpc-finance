@@ -1,3 +1,4 @@
+import { queryKeys } from "../../lib/queryKeys";
 import {
   Button,
   Card,
@@ -16,28 +17,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
 import { useDate } from "../../hooks/useDateHook";
 import { useBudget } from "../../hooks/useBudget";
-import { useSettings } from "../../hooks/useSettings";
-import { useAuth } from "../../hooks/useAuthHook";
-import { useTransactions } from "../../hooks/useTransactions";
 import { SchemaBudgetCategory } from "../../lib/types";
 import SyncTransactionsButton from "./SyncTransactionsButton";
 import BudgetProgress from "./BudgetProgress";
 import BudgetTable from "./BudgetTable";
 import UncategorizedTransactions from "./UncategorizedTransactions";
 import CategoryDetail from "./CategoryDetail";
+import { useErrorHandler } from "../../hooks/useErrorHandler";
 
 export default function BudgetPage() {
   const { date } = useDate();
   const { data: budget, isLoading } = useBudget(date);
-  const { data: settings } = useSettings();
-  const { data: transactions = [] } = useTransactions(date);
-  const { user } = useAuth();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>();
   const [creating, setCreating] = useState(false);
   const client = useAmplifyClient();
   const queryClient = useQueryClient();
-
-  console.log("Current authenticated user:", user);
+  const { withErrorHandling } = useErrorHandler();
 
   const selectedCategory = budget?.budgetCategories.find(
     (c) => c.id === selectedCategoryId,
@@ -45,77 +40,79 @@ export default function BudgetPage() {
 
   const createBudget = async () => {
     setCreating(true);
-    const budgetMonth = date.toLocaleDateString(undefined, {
-      month: "2-digit",
-      year: "2-digit",
-    });
+    await withErrorHandling(async () => {
+      const budgetMonth = date.toLocaleDateString(undefined, {
+        month: "2-digit",
+        year: "2-digit",
+      });
 
-    const allBudgets = await client.models.Budget.list();
-    const mostRecentBudget = allBudgets.data?.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )[0];
+      const allBudgets = await client.models.Budget.list();
+      const mostRecentBudget = allBudgets.data?.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )[0];
 
-    const newBudget = await client.models.Budget.create({ budgetMonth });
+      const newBudget = await client.models.Budget.create({ budgetMonth });
 
-    if (mostRecentBudget) {
-      const allCategories: SchemaBudgetCategory[] = [];
-      let nextToken: string | null | undefined = null;
+      if (mostRecentBudget) {
+        const allCategories: SchemaBudgetCategory[] = [];
+        let nextToken: string | null | undefined = null;
 
-      do {
-        const result: {
-          data: SchemaBudgetCategory[];
-          nextToken?: string | null;
-        } =
-          await client.models.BudgetCategory.listBudgetCategoryByBudgetBudgetCategoriesId(
-            {
-              budgetBudgetCategoriesId: mostRecentBudget.id,
-              // @ts-expect-error - nextToken is supported at runtime but not in types
-              nextToken,
-            },
-          );
-        allCategories.push(...result.data);
-        nextToken = result.nextToken;
-      } while (nextToken);
+        do {
+          const result: {
+            data: SchemaBudgetCategory[];
+            nextToken?: string | null;
+          } =
+            await client.models.BudgetCategory.listBudgetCategoryByBudgetBudgetCategoriesId(
+              {
+                budgetBudgetCategoriesId: mostRecentBudget.id,
+                // @ts-expect-error - nextToken is supported at runtime but not in types
+                nextToken,
+              },
+            );
+          allCategories.push(...result.data);
+          nextToken = result.nextToken;
+        } while (nextToken);
 
-      await Promise.all(
-        allCategories.map((cat) =>
-          client.models.BudgetCategory.create({
-            budgetBudgetCategoriesId: newBudget.data!.id,
-            name: cat.name,
-            type: cat.type,
-            plannedAmount: cat.plannedAmount,
-          }),
-        ),
-      );
-    } else {
-      // Create default categories for first-time users
-      const defaultCategories = [
-        { name: "Paycheck", type: "Income" },
-        { name: "Investing", type: "Saving" },
-        { name: "Housing", type: "Needs" },
-        { name: "Groceries", type: "Needs" },
-        { name: "Transport", type: "Needs" },
-        { name: "Entertainment", type: "Wants" },
-        { name: "Dining Out", type: "Wants" },
-        { name: "Shopping", type: "Wants" },
-        { name: "Misc", type: "Wants" },
-        { name: "Giving", type: "Wants" },
-      ];
+        await Promise.all(
+          allCategories.map((cat) =>
+            client.models.BudgetCategory.create({
+              budgetBudgetCategoriesId: newBudget.data!.id,
+              name: cat.name,
+              type: cat.type,
+              plannedAmount: cat.plannedAmount,
+            }),
+          ),
+        );
+      } else {
+        // Create default categories for first-time users
+        const defaultCategories = [
+          { name: "Paycheck", type: "Income" },
+          { name: "Investing", type: "Saving" },
+          { name: "Housing", type: "Needs" },
+          { name: "Groceries", type: "Needs" },
+          { name: "Transport", type: "Needs" },
+          { name: "Entertainment", type: "Wants" },
+          { name: "Dining Out", type: "Wants" },
+          { name: "Shopping", type: "Wants" },
+          { name: "Misc", type: "Wants" },
+          { name: "Giving", type: "Wants" },
+        ];
 
-      await Promise.all(
-        defaultCategories.map((cat) =>
-          client.models.BudgetCategory.create({
-            budgetBudgetCategoriesId: newBudget.data!.id,
-            name: cat.name,
-            type: cat.type as "Income" | "Saving" | "Needs" | "Wants",
-            plannedAmount: 0,
-          }),
-        ),
-      );
-    }
+        await Promise.all(
+          defaultCategories.map((cat) =>
+            client.models.BudgetCategory.create({
+              budgetBudgetCategoriesId: newBudget.data!.id,
+              name: cat.name,
+              type: cat.type as "Income" | "Saving" | "Needs" | "Wants",
+              plannedAmount: 0,
+            }),
+          ),
+        );
+      }
 
-    queryClient.invalidateQueries({ queryKey: ["budget"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
+    }, "Failed to create budget");
     setCreating(false);
   };
 
@@ -197,13 +194,10 @@ export default function BudgetPage() {
 
   return (
     <>
-      <SyncTransactionsButton date={date} settings={settings} />
-      <BudgetProgress budget={budget} />
-      <BudgetTable
-        budget={budget}
-        onClickCategory={(c) => setSelectedCategoryId(c.id)}
-      />
-      <UncategorizedTransactions transactions={transactions} />
+      <SyncTransactionsButton />
+      <BudgetProgress />
+      <BudgetTable onClickCategory={(c) => setSelectedCategoryId(c.id)} />
+      <UncategorizedTransactions />
     </>
   );
 }

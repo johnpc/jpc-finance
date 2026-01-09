@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAmplifyClient } from "./useAmplifyClient";
 import { TransactionEntity } from "../lib/types";
+import { queryKeys } from "../lib/queryKeys";
 
 export function useTransactions(date: Date) {
   const client = useAmplifyClient();
 
   return useQuery({
-    queryKey: ["transactions", date.toISOString()],
+    queryKey: queryKeys.transactions(date),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
     queryFn: async (): Promise<TransactionEntity[]> => {
       const transactionMonth = date.toLocaleDateString(undefined, {
         month: "2-digit",

@@ -7,6 +7,8 @@ export function useSettings() {
 
   return useQuery({
     queryKey: ["settings"],
+    staleTime: 1000 * 60 * 10, // 10 minutes - settings rarely change
+    gcTime: 1000 * 60 * 30, // 30 minutes
     queryFn: async (): Promise<SettingsEntity> => {
       const response = await client.models.Settings.list();
       if (response.data?.length) {

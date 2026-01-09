@@ -7,6 +7,7 @@ import {
 } from "@aws-amplify/ui-react";
 import { useDate } from "../../hooks/useDateHook";
 import { useTransactions } from "../../hooks/useTransactions";
+import { toDollars } from "../../lib/currency";
 
 export default function Transactions() {
   const { date } = useDate();
@@ -25,7 +26,7 @@ export default function Transactions() {
         {transactions.map((transaction) => (
           <TableRow key={transaction.id}>
             <TableCell>{transaction.date.toLocaleDateString()}</TableCell>
-            <TableCell>${(transaction.amount / 100).toFixed(2)}</TableCell>
+            <TableCell>${toDollars(transaction.amount).toFixed(2)}</TableCell>
             <TableCell>{transaction.name}</TableCell>
           </TableRow>
         ))}

@@ -1,12 +1,14 @@
 import { TableCell, TableRow, useTheme } from "@aws-amplify/ui-react";
 import { Delete } from "@mui/icons-material";
 import { useDrop } from "react-dnd";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
 import { useErrorHandler } from "../../hooks/useErrorHandler";
 import { BudgetCategoryEntity, TransactionEntity } from "../../lib/types";
 import { EditModal } from "../EditModal";
+import { queryKeys } from "../../lib/queryKeys";
+import { toDollars, toCents } from "../../lib/currency";
 
 export default function BudgetTableCategoryRow({
   category,
@@ -25,53 +27,167 @@ export default function BudgetTableCategoryRow({
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "TRANSACTION",
     drop: (item: { transaction: TransactionEntity }) => {
-      withErrorHandling(async () => {
-        await client.models.Transaction.update({
-          id: item.transaction.id,
-          budgetCategoryTransactionsId: category.id,
-        });
-        queryClient.invalidateQueries({ queryKey: ["transactions"] });
-        queryClient.invalidateQueries({ queryKey: ["budget"] });
-      }, "Failed to categorize transaction");
+      categorizeMutation.mutate({
+        transactionId: item.transaction.id,
+        categoryId: category.id,
+      });
     },
     collect: (monitor) => ({ isOver: !!monitor.isOver() }),
   }));
 
-  const validateName = (name: string): string | null => {
+  const categorizeMutation = useMutation({
+    mutationFn: async ({
+      transactionId,
+      categoryId,
+    }: {
+      transactionId: string;
+      categoryId: string;
+    }) => {
+      await client.models.Transaction.update({
+        id: transactionId,
+        budgetCategoryTransactionsId: categoryId,
+      });
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.budgets() });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.allTransactions(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.allTransactions() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
+    },
+    onError: (error) => {
+      withErrorHandling(
+        () => Promise.reject(error),
+        "Failed to categorize transaction",
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.allTransactions() });
+    },
+  });
+
+  const updateNameMutation = useMutation({
+    mutationFn: async (name: string) => {
+      await client.models.BudgetCategory.update({ id: category.id, name });
+    },
+    onMutate: async (name) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.budgets() });
+      const previous = queryClient.getQueryData(queryKeys.budgets());
+      queryClient.setQueryData(
+        queryKeys.budgets(),
+        (old: BudgetCategoryEntity[] | undefined) =>
+          old?.map((c) => (c.id === category.id ? { ...c, name } : c)),
+      );
+      return { previous };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
+      setEditingName(false);
+    },
+    onError: (error, _name, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.budgets(), context.previous);
+      }
+      withErrorHandling(
+        () => Promise.reject(error),
+        "Failed to update category name",
+      );
+    },
+  });
+
+  const updateAmountMutation = useMutation({
+    mutationFn: async (amountString: string) => {
+      const amount = parseFloat(amountString);
+      await client.models.BudgetCategory.update({
+        id: category.id,
+        plannedAmount: toCents(amount),
+      });
+    },
+    onMutate: async (amountString) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.budgets() });
+      const previous = queryClient.getQueryData(queryKeys.budgets());
+      const plannedAmount = toCents(parseFloat(amountString));
+      queryClient.setQueryData(
+        queryKeys.budgets(),
+        (old: BudgetCategoryEntity[] | undefined) =>
+          old?.map((c) => (c.id === category.id ? { ...c, plannedAmount } : c)),
+      );
+      return { previous };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
+      setEditingAmount(false);
+    },
+    onError: (error, _amount, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.budgets(), context.previous);
+      }
+      withErrorHandling(
+        () => Promise.reject(error),
+        "Failed to update planned amount",
+      );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      await client.models.BudgetCategory.delete({ id: category.id });
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.budgets() });
+      const previous = queryClient.getQueryData(queryKeys.budgets());
+      queryClient.setQueryData(
+        queryKeys.budgets(),
+        (old: BudgetCategoryEntity[] | undefined) =>
+          old?.filter((c) => c.id !== category.id),
+      );
+      return { previous };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
+    },
+    onError: (error, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.budgets(), context.previous);
+      }
+      withErrorHandling(
+        () => Promise.reject(error),
+        "Failed to delete category",
+      );
+    },
+  });
+
+  const validateName = useCallback((name: string): string | null => {
     if (!name.trim()) return "Name cannot be empty";
     if (name.length > 50) return "Name must be 50 characters or less";
     return null;
-  };
+  }, []);
 
-  const validateAmount = (amount: string): string | null => {
+  const validateAmount = useCallback((amount: string): string | null => {
     const num = parseFloat(amount);
     if (isNaN(num)) return "Please enter a valid number";
     if (num < 0) return "Amount cannot be negative";
     if (num > 1000000) return "Amount must be less than $1,000,000";
     return null;
-  };
+  }, []);
 
-  const updateName = async (name: string) => {
-    await withErrorHandling(async () => {
-      await client.models.BudgetCategory.update({ id: category.id, name });
-      queryClient.invalidateQueries({ queryKey: ["budget"] });
-      setEditingName(false);
-    }, "Failed to update category name");
-  };
+  const updateName = useCallback(
+    async (name: string) => {
+      updateNameMutation.mutate(name);
+    },
+    [updateNameMutation],
+  );
 
-  const updatePlannedAmount = async (amountString: string) => {
-    await withErrorHandling(async () => {
-      const amount = parseFloat(amountString);
-      await client.models.BudgetCategory.update({
-        id: category.id,
-        plannedAmount: Math.round(amount * 100),
-      });
-      queryClient.invalidateQueries({ queryKey: ["budget"] });
-      setEditingAmount(false);
-    }, "Failed to update planned amount");
-  };
+  const updatePlannedAmount = useCallback(
+    async (amountString: string) => {
+      updateAmountMutation.mutate(amountString);
+    },
+    [updateAmountMutation],
+  );
 
-  const removeCategory = async () => {
+  const removeCategory = useCallback(async () => {
     if (
       !confirm(
         `Are you sure you want to delete "${category.name}"? This will uncategorize ${category.transactions.length} transactions.`,
@@ -79,22 +195,31 @@ export default function BudgetTableCategoryRow({
     ) {
       return;
     }
-    await withErrorHandling(async () => {
-      await client.models.BudgetCategory.delete({ id: category.id });
-      queryClient.invalidateQueries({ queryKey: ["budget"] });
-    }, "Failed to delete category");
-  };
+    deleteMutation.mutate();
+  }, [category.name, category.transactions.length, deleteMutation]);
 
-  const planned = category.plannedAmount / 100;
-  let total = category.transactions.reduce((acc, t) => t.amount / 100 + acc, 0);
-  if (category.type === "Income") total = total * -1;
+  const { planned, total, backgroundColor } = useMemo(() => {
+    const planned = toDollars(category.plannedAmount);
+    let total = category.transactions.reduce(
+      (acc, t) => toDollars(t.amount) + acc,
+      0,
+    );
+    if (category.type === "Income") total = total * -1;
 
-  let backgroundColor = "";
-  if (total > planned - planned * 0.1)
-    backgroundColor = tokens.colors.yellow[20].value;
-  if (total > planned - planned * 0.01)
-    backgroundColor = tokens.colors.green[20].value;
-  if (total > planned) backgroundColor = tokens.colors.red[20].value;
+    let backgroundColor = "";
+    if (total > planned - planned * 0.1)
+      backgroundColor = tokens.colors.yellow[20].value;
+    if (total > planned - planned * 0.01)
+      backgroundColor = tokens.colors.green[20].value;
+    if (total > planned) backgroundColor = tokens.colors.red[20].value;
+
+    return { planned, total, backgroundColor };
+  }, [
+    category.plannedAmount,
+    category.transactions,
+    category.type,
+    tokens.colors,
+  ]);
 
   return (
     <>

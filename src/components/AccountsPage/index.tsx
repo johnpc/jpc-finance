@@ -1,3 +1,4 @@
+import { queryKeys } from "../../lib/queryKeys";
 import { useCallback, useEffect, useState } from "react";
 import { useTellerConnect } from "teller-connect-react";
 import { usePlaidLink } from "react-plaid-link";
@@ -13,6 +14,7 @@ import { createLinkToken, exchangePublicToken } from "../../helpers/plaid";
 import { syncAllTransactions } from "../../helpers/sync-all-transactions";
 import Accounts from "./Accounts";
 import Transactions from "./Transactions";
+import { useErrorHandler } from "../../hooks/useErrorHandler";
 
 export default function AccountsPage() {
   const { date } = useDate();
@@ -21,19 +23,24 @@ export default function AccountsPage() {
   const [syncing, setSyncing] = useState(false);
   const client = useAmplifyClient();
   const queryClient = useQueryClient();
+  const { withErrorHandling } = useErrorHandler();
 
   const { open, ready } = useTellerConnect({
     applicationId: "app_otq7p1qk69rkla3vmq000",
     onSuccess: async (authorization: { accessToken: string }) => {
       setSyncing(true);
-      const user = await getCurrentUser();
-      await client.models.TellerAuthorization.create({
-        accessToken: authorization.accessToken,
-        amplifyUserId: user.userId,
-      });
-      await syncAllTransactions(date, settings);
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      await withErrorHandling(async () => {
+        const user = await getCurrentUser();
+        await client.models.TellerAuthorization.create({
+          accessToken: authorization.accessToken,
+          amplifyUserId: user.userId,
+        });
+        await syncAllTransactions(date, settings);
+        queryClient.invalidateQueries({ queryKey: ["accounts"] });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.allTransactions(),
+        });
+      }, "Failed to connect Teller account");
       setSyncing(false);
     },
   });
@@ -41,12 +48,16 @@ export default function AccountsPage() {
   const onPlaidSuccess = useCallback(
     async (publicToken: string) => {
       setSyncing(true);
-      await exchangePublicToken(publicToken);
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      await withErrorHandling(async () => {
+        await exchangePublicToken(publicToken);
+        queryClient.invalidateQueries({ queryKey: ["accounts"] });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.allTransactions(),
+        });
+      }, "Failed to connect Plaid account");
       setSyncing(false);
     },
-    [queryClient],
+    [queryClient, withErrorHandling],
   );
 
   const plaidLink = usePlaidLink({
@@ -59,20 +70,24 @@ export default function AccountsPage() {
   }, []);
 
   const handleAddAccountViaFinanceKit = async () => {
-    await JPCFinanceKit.requestAuthorization();
-    await client.models.Settings.update({
-      id: settings!.id,
-      enableFinanceKit: true,
-    });
-    queryClient.invalidateQueries({ queryKey: ["settings"] });
+    await withErrorHandling(async () => {
+      await JPCFinanceKit.requestAuthorization();
+      await client.models.Settings.update({
+        id: settings!.id,
+        enableFinanceKit: true,
+      });
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+    }, "Failed to enable FinanceKit");
   };
 
   const handleRemoveFinanceKit = async () => {
-    await client.models.Settings.update({
-      id: settings!.id,
-      enableFinanceKit: false,
-    });
-    queryClient.invalidateQueries({ queryKey: ["settings"] });
+    await withErrorHandling(async () => {
+      await client.models.Settings.update({
+        id: settings!.id,
+        enableFinanceKit: false,
+      });
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+    }, "Failed to disable FinanceKit");
   };
 
   return (
