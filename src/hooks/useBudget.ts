@@ -7,19 +7,18 @@ import {
 } from "../lib/types";
 import { queryKeys } from "../lib/queryKeys";
 import { fetchAllPages } from "../lib/amplify-types";
+import { formatBudgetMonth } from "../lib/dateUtils";
+import { CACHE_TIMES } from "../lib/constants";
 
 export function useBudget(date: Date) {
   const client = useAmplifyClient();
 
   return useQuery({
     queryKey: queryKeys.budget(date),
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: CACHE_TIMES.STALE_TIME,
+    gcTime: CACHE_TIMES.GC_TIME,
     queryFn: async (): Promise<BudgetEntity | null> => {
-      const budgetMonth = date.toLocaleDateString(undefined, {
-        month: "2-digit",
-        year: "2-digit",
-      });
+      const budgetMonth = formatBudgetMonth(date);
 
       // Fetch all budgets with pagination
       const allBudgets = await fetchAllPages({ budgetMonth }, (params) =>
@@ -40,10 +39,7 @@ export function useBudget(date: Date) {
       );
 
       // Fetch ALL transactions for the month at once (fixes N+1 problem)
-      const transactionMonth = date.toLocaleDateString(undefined, {
-        month: "2-digit",
-        year: "2-digit",
-      });
+      const transactionMonth = formatBudgetMonth(date);
       const allTransactions = await fetchAllPages(
         { transactionMonth },
         (params) =>

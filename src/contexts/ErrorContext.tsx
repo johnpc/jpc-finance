@@ -1,6 +1,7 @@
 import { Alert, Flex } from "@aws-amplify/ui-react";
-import { useState, ReactNode, useCallback } from "react";
+import { useState, ReactNode, useCallback, useEffect } from "react";
 import { ErrorContext } from "./ErrorContextDef";
+import { DEBOUNCE_TIMES } from "../lib/constants";
 
 interface Toast {
   id: string;
@@ -14,9 +15,18 @@ export function ErrorProvider({ children }: { children: ReactNode }) {
   const addToast = useCallback((message: string, type: Toast["type"]) => {
     const id = Math.random().toString(36).substring(7);
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
+
+    const timeoutId = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
+    }, DEBOUNCE_TIMES.TOAST_DURATION);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      setToasts([]);
+    };
   }, []);
 
   const showError = useCallback(

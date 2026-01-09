@@ -10,6 +10,21 @@ import dotenv from "dotenv";
 import { tellerioListTransactionsFunction } from "./function/tellerio/resource";
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = [
+  "ADMIN_API_KEY",
+  "PLAID_SECRET",
+  "PLAID_CLIENT_ID",
+  "PLAID_ENV",
+  "PLAID_REDIRECT_URI",
+];
+
+requiredEnvVars.forEach((key) => {
+  if (!process.env[key]) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+});
+
 const helloWorldFunction = defineFunction({
   entry: "./function/hello-world.ts",
 });

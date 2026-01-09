@@ -24,6 +24,7 @@ import UncategorizedTransactions from "./UncategorizedTransactions";
 import CategoryDetail from "./CategoryDetail";
 import { useErrorHandler } from "../../hooks/useErrorHandler";
 import { fetchAllPages } from "../../lib/amplify-types";
+import { formatBudgetMonth, formatMonthYear } from "../../lib/dateUtils";
 
 export default function BudgetPage() {
   const { date } = useDate();
@@ -41,10 +42,7 @@ export default function BudgetPage() {
   const createBudget = async () => {
     setCreating(true);
     await withErrorHandling(async () => {
-      const budgetMonth = date.toLocaleDateString(undefined, {
-        month: "2-digit",
-        year: "2-digit",
-      });
+      const budgetMonth = formatBudgetMonth(date);
 
       const allBudgets = await client.models.Budget.list();
       const mostRecentBudget = allBudgets.data?.sort(
@@ -149,14 +147,13 @@ export default function BudgetPage() {
   }
 
   if (!budget) {
-    const month = date.toLocaleString(undefined, { month: "long" });
-    const year = date.getFullYear();
+    const monthYear = formatMonthYear(date);
 
     return (
       <Card variation="outlined">
         <Flex direction="column" alignItems="center" gap="1rem" padding="3rem">
           <Heading level={4}>
-            You haven't started your {month} {year} budget yet
+            You haven't started your {monthYear} budget yet
           </Heading>
           <Text color="font.tertiary">
             Create a new budget to start tracking your expenses

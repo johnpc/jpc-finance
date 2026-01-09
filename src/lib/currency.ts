@@ -16,3 +16,20 @@ export const formatCurrency = (cents: number): string => {
   const dollars = toDollars(cents);
   return `$${Math.abs(dollars).toFixed(2)}`;
 };
+
+export const formatCurrencyWithSign = (cents: number): string => {
+  const dollars = toDollars(cents);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(dollars);
+};
+
+// Normalize transaction amounts (Plaid/TellerIO return positive for debits)
+export const normalizeTransactionAmount = (
+  amount: number,
+  isInCents = false,
+): number => {
+  const cents = isInCents ? amount : toCents(amount);
+  return cents * -1; // Flip sign for display
+};

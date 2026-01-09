@@ -236,8 +236,21 @@ export default function BudgetTableCategoryRow({
         <TableCell onClick={() => onClickCategory(category)}>
           ${total.toFixed(2)}
         </TableCell>
-        <TableCell onClick={removeCategory}>
-          <Delete />
+        <TableCell>
+          <button
+            onClick={removeCategory}
+            aria-label={`Delete ${category.name} category`}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Delete />
+          </button>
         </TableCell>
       </TableRow>
 

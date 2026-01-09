@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAmplifyClient } from "../../hooks/useAmplifyClient";
 import { BudgetCategoryEntity } from "../../lib/types";
 import BudgetTableCategoryRow from "./BudgetTableCategoryRow";
-import { toDollars } from "../../lib/currency";
+import { toDollars, formatCurrencyWithSign } from "../../lib/currency";
 import { useErrorHandler } from "../../hooks/useErrorHandler";
 import { useDate } from "../../hooks/useDateHook";
 import { useBudget } from "../../hooks/useBudget";
@@ -80,10 +80,6 @@ export default function BudgetTable({
           0,
         );
         const sectionSpentAmountDollars = toDollars(sectionSpentAmount);
-        const moneyFormatter = new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-        });
 
         return (
           <Fragment key={section.title}>
@@ -99,7 +95,7 @@ export default function BudgetTable({
                     {section.title}
                   </Text>
                   <Text>
-                    Spent {moneyFormatter.format(sectionSpentAmountDollars)} (
+                    Spent {formatCurrencyWithSign(sectionSpentAmount)} (
                     {(
                       (sectionSpentAmountDollars * 100) /
                       sectionPlannedAmount
@@ -108,7 +104,10 @@ export default function BudgetTable({
                   </Text>
                   <Text marginBottom={tokens.space.small}>
                     {section.subtitle} -{" "}
-                    {moneyFormatter.format(sectionPlannedAmount)} (
+                    {formatCurrencyWithSign(
+                      toDollars(sectionPlannedAmount) * 100,
+                    )}{" "}
+                    (
                     {(
                       (sectionPlannedAmount / incomeAmountDollars) *
                       100

@@ -13,6 +13,7 @@ import { SubscriptionProvider } from "./providers/SubscriptionProvider";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AsyncErrorBoundary } from "./components/AsyncErrorBoundary";
 import { ErrorProvider } from "./contexts/ErrorContext";
+import { CACHE_TIMES, RETRY_CONFIG } from "./lib/constants";
 
 Amplify.configure(config);
 
@@ -28,15 +29,15 @@ if ("serviceWorker" in navigator) {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // 1 minute default
-      gcTime: 1000 * 60 * 5, // 5 minutes default (formerly cacheTime)
-      refetchOnWindowFocus: true, // Enable stale-while-revalidate on focus
-      refetchOnReconnect: true, // Refetch on reconnect
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: CACHE_TIMES.DEFAULT_STALE_TIME,
+      gcTime: CACHE_TIMES.DEFAULT_GC_TIME,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      retry: RETRY_CONFIG.MAX_RETRIES,
+      retryDelay: RETRY_CONFIG.RETRY_DELAY,
     },
     mutations: {
-      retry: 1,
+      retry: RETRY_CONFIG.MUTATION_RETRIES,
       onError: (error) => {
         console.error("Mutation error:", error);
       },

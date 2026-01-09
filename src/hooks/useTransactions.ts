@@ -3,19 +3,18 @@ import { useAmplifyClient } from "./useAmplifyClient";
 import { TransactionEntity } from "../lib/types";
 import { queryKeys } from "../lib/queryKeys";
 import { fetchAllPages } from "../lib/amplify-types";
+import { formatBudgetMonth } from "../lib/dateUtils";
+import { CACHE_TIMES } from "../lib/constants";
 
 export function useTransactions(date: Date) {
   const client = useAmplifyClient();
 
   return useQuery({
     queryKey: queryKeys.transactions(date),
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: CACHE_TIMES.STALE_TIME,
+    gcTime: CACHE_TIMES.GC_TIME,
     queryFn: async (): Promise<TransactionEntity[]> => {
-      const transactionMonth = date.toLocaleDateString(undefined, {
-        month: "2-digit",
-        year: "2-digit",
-      });
+      const transactionMonth = formatBudgetMonth(date);
 
       // Fetch all transactions with pagination
       const allTransactions = await fetchAllPages(
