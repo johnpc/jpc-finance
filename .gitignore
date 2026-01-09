@@ -30,3 +30,6 @@ amplifyconfiguration*
 .env
 .eslintcache
 *.pem
+
+# Local tracking files
+improvements.md

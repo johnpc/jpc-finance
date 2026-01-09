@@ -10,6 +10,8 @@ import App from "./App";
 import { AuthProvider } from "./hooks/useAuth";
 import { DateProvider } from "./hooks/useDate";
 import { SubscriptionProvider } from "./providers/SubscriptionProvider";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ErrorProvider } from "./contexts/ErrorContext";
 
 Amplify.configure(config);
 
@@ -18,6 +20,8 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
 });
@@ -40,17 +44,23 @@ const theme: Theme = {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <DateProvider>
-            <SubscriptionProvider>
-              <App />
-            </SubscriptionProvider>
-          </DateProvider>
-        </AuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </ThemeProvider>
-  </React.StrictMode>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <ErrorProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <DateProvider>
+                <SubscriptionProvider>
+                  <ErrorBoundary>
+                    <App />
+                  </ErrorBoundary>
+                </SubscriptionProvider>
+              </DateProvider>
+            </AuthProvider>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </QueryClientProvider>
+        </ErrorProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  </React.StrictMode>,
 );
