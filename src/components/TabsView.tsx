@@ -34,14 +34,12 @@ export default function TabsView() {
         <Text as="span" fontWeight="bold" margin="15%">
           {dateLocaleString}
         </Text>
+        <ArrowForwardIos
+          style={{ paddingTop: "10px" }}
+          onClick={() => setDate(addMonths(date, 1))}
+        />
         {dateLocaleString !== nowLocaleString && (
-          <>
-            <ArrowForwardIos
-              style={{ paddingTop: "10px" }}
-              onClick={() => setDate(addMonths(date, 1))}
-            />
-            <Button onClick={() => setDate(new Date())}>today</Button>
-          </>
+          <Button onClick={() => setDate(new Date())}>today</Button>
         )}
       </Text>
       <Tabs

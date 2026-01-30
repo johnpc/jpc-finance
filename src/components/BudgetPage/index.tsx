@@ -45,9 +45,18 @@ export default function BudgetPage() {
       const budgetMonth = formatBudgetMonth(date);
 
       const allBudgets = await client.models.Budget.list();
-      const mostRecentBudget = allBudgets.data?.sort(
+      const parseBudgetMonth = (bm: string) => {
+        const [month, year] = bm.split("/").map(Number);
+        return new Date(2000 + year, month - 1);
+      };
+      const targetDate = parseBudgetMonth(budgetMonth);
+      const previousBudgets = allBudgets.data?.filter(
+        (b) => parseBudgetMonth(b.budgetMonth) < targetDate,
+      );
+      const mostRecentBudget = previousBudgets?.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          parseBudgetMonth(b.budgetMonth).getTime() -
+          parseBudgetMonth(a.budgetMonth).getTime(),
       )[0];
 
       const newBudget = await client.models.Budget.create({ budgetMonth });

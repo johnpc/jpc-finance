@@ -37,6 +37,7 @@ export default function BudgetProgress() {
     );
 
   const isBalanced = incomeAmount === expenseAmount;
+  const difference = incomeAmount - expenseAmount;
 
   return (
     <>
@@ -47,10 +48,11 @@ export default function BudgetProgress() {
           </View>
         ) : (
           <View textAlign="center">
-            <Heading>❌ Your budget is not balanced.</Heading>
-            <Text as="p">
-              ${toDollars(expenseAmount)} spent and ${toDollars(incomeAmount)}{" "}
-              earned
+            <Heading>❌ Not balanced</Heading>
+            <Text as="p" color="font.tertiary">
+              {difference > 0
+                ? `You have $${toDollars(difference).toFixed(2)} uncategorized`
+                : `Your plan overspends by $${toDollars(-difference).toFixed(2)} compared to your income`}
             </Text>
           </View>
         )}
