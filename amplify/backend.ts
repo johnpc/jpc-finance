@@ -105,3 +105,8 @@ functions.forEach((fn, index) => {
 backend.addOutput({
   custom: outputs,
 });
+
+// Extend refresh token validity to 10 years (max allowed)
+const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
+cfnUserPoolClient.refreshTokenValidity = 3650;
+cfnUserPoolClient.tokenValidityUnits = { refreshToken: "days" };
