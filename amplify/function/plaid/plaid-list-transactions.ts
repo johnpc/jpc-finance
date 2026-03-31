@@ -21,14 +21,15 @@ type PlaidTransaction = {
   website?: string | null;
   pending: boolean;
   transaction_id: string;
+  pending_transaction_id?: string | null;
 };
 
 const syncTransactions = async (
   plaidTransactions: PlaidTransaction[],
   owner: string,
 ) => {
-  const transactions = plaidTransactions.map(
-    (plaidTransaction: PlaidTransaction) => ({
+  for (const plaidTransaction of plaidTransactions) {
+    const transaction = {
       amount: Math.floor(plaidTransaction.amount * 100) * -1,
       transactionMonth: new Date(plaidTransaction.date).toLocaleDateString(
         undefined,
@@ -42,17 +43,32 @@ const syncTransactions = async (
       pending: plaidTransaction.pending,
       plaidTransactionId: plaidTransaction.transaction_id,
       owner,
-    }),
-  );
+    };
 
-  for (const transaction of transactions) {
-    const existingTransactions =
+    // If this is a posted transaction that was previously pending, delete the pending one
+    if (!plaidTransaction.pending && plaidTransaction.pending_transaction_id) {
+      const pendingTxns =
+        await amplifyClient.models.Transaction.listTransactionByPlaidTransactionId(
+          { plaidTransactionId: plaidTransaction.pending_transaction_id },
+        );
+      const pendingTxn = pendingTxns.data?.find((t) => t);
+      if (pendingTxn) {
+        await amplifyClient.models.Transaction.update({
+          id: pendingTxn.id,
+          deleted: true,
+        });
+        console.log({ deletedPending: pendingTxn.id, postedId: plaidTransaction.transaction_id });
+      }
+    }
+
+    // Check by plaidTransactionId first
+    const existingByPlaidId =
       await amplifyClient.models.Transaction.listTransactionByPlaidTransactionId(
         {
           plaidTransactionId: transaction.plaidTransactionId,
         },
       );
-    const existingTransaction = existingTransactions.data?.find((t) => t);
+    const existingTransaction = existingByPlaidId.data?.find((t) => t);
     if (existingTransaction) {
       const updated = await amplifyClient.models.Transaction.update({
         ...transaction,
@@ -62,6 +78,38 @@ const syncTransactions = async (
       });
       console.log({ updated, errors: updated.errors });
     } else {
+      // Dedupe fallback: same amount + pending transaction + dates within 3 days
+      // For cases where pending_transaction_id wasn't provided
+      if (!plaidTransaction.pending) {
+        const existingByMonth =
+          await amplifyClient.models.Transaction.listTransactionByTransactionMonth(
+            { transactionMonth: transaction.transactionMonth },
+            {
+              filter: {
+                owner: { eq: transaction.owner },
+                amount: { eq: transaction.amount },
+              },
+            },
+          );
+
+        const pendingDupe = existingByMonth.data?.find((t) => {
+          if (!t || t.deleted || !t.pending) return false;
+          const daysDiff = Math.abs(
+            new Date(transaction.date).getTime() - new Date(t.date).getTime()
+          ) / (1000 * 60 * 60 * 24);
+          return daysDiff <= 5;
+        });
+
+        if (pendingDupe) {
+          // Delete the pending, create the posted
+          await amplifyClient.models.Transaction.update({
+            id: pendingDupe.id,
+            deleted: true,
+          });
+          console.log({ deletedPendingFallback: pendingDupe.id, reason: "posted version arrived" });
+        }
+      }
+
       const created = await amplifyClient.models.Transaction.create({
         ...transaction,
         name: transaction.name!,
