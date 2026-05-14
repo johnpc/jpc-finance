@@ -155,28 +155,40 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
 
   const aggregatedAccounts = [] as AccountBase[][];
   const aggregatedTransactions = [] as PlaidTransaction[][];
+  const errors = [] as { accessToken: string; error_code: string; error_message: string }[];
   const promises = accessTokens.map(async (accessToken: string) => {
-    const transactionsResponse = await plaidClient.transactionsGet({
-      access_token: accessToken,
-      start_date: dateToString(lastMonth),
-      end_date: dateToString(date),
-    });
-    console.log({ transactionsResponse });
-    console.log({ transactionsResponseData: transactionsResponse.data });
+    try {
+      const transactionsResponse = await plaidClient.transactionsGet({
+        access_token: accessToken,
+        start_date: dateToString(lastMonth),
+        end_date: dateToString(date),
+      });
+      console.log({ transactionsResponse });
+      console.log({ transactionsResponseData: transactionsResponse.data });
 
-    await syncTransactions(transactionsResponse.data.transactions, owner);
-    aggregatedTransactions.push(transactionsResponse.data.transactions);
-    await syncAccounts(transactionsResponse.data.accounts, owner);
-    aggregatedAccounts.push(transactionsResponse.data.accounts);
+      await syncTransactions(transactionsResponse.data.transactions, owner);
+      aggregatedTransactions.push(transactionsResponse.data.transactions);
+      await syncAccounts(transactionsResponse.data.accounts, owner);
+      aggregatedAccounts.push(transactionsResponse.data.accounts);
+    } catch (e: any) {
+      const plaidError = e?.response?.data;
+      console.log({ plaidError, accessToken });
+      errors.push({
+        accessToken: accessToken.slice(0, 20) + "...",
+        error_code: plaidError?.error_code || "UNKNOWN",
+        error_message: plaidError?.error_message || e?.message || "Unknown error",
+      });
+    }
   });
   await Promise.all(promises);
 
   return {
     statusCode: 200,
     body: JSON.stringify({
-      transactions: aggregatedAccounts,
+      transactions: aggregatedTransactions,
       accounts: aggregatedAccounts,
-      message: "success!",
+      message: errors.length > 0 ? "partial" : "success!",
+      errors,
     }),
   };
 };
