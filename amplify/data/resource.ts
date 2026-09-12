@@ -83,6 +83,19 @@ const schema = a.schema({
       enableFinanceKit: a.boolean().required().default(false),
     })
     .authorization((allow) => [allow.custom(), allow.owner()]),
+  SyncRun: a
+    .model({
+      source: a.string().required(), // "plaid" | "financeKit"
+      startedAt: a.datetime().required(),
+      durationMs: a.integer().required(),
+      newTransactionCount: a.integer().required(),
+      error: a.string(),
+      owner: a.string().required(),
+    })
+    .secondaryIndexes((index) => [
+      index("owner").sortKeys(["startedAt"]).queryField("listSyncRunByOwner"),
+    ])
+    .authorization((allow) => [allow.custom(), allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

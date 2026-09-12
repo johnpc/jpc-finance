@@ -1,6 +1,7 @@
 import { LambdaFunctionURLEvent } from "aws-lambda";
 import { client as plaidClient } from "../helpers/get-plaid-client";
 import { client as amplifyClient } from "../helpers/get-amplify-client";
+import config from "../../../amplify_outputs.json";
 import { endOfMonth, subMonths } from "date-fns";
 import { AccountBase } from "plaid";
 
@@ -24,10 +25,13 @@ type PlaidTransaction = {
   pending_transaction_id?: string | null;
 };
 
+// Returns how many transactions were genuinely created (updates and
+// pending->posted transitions don't count as "new").
 const syncTransactions = async (
   plaidTransactions: PlaidTransaction[],
   owner: string,
 ) => {
+  let createdCount = 0;
   for (const plaidTransaction of plaidTransactions) {
     const transaction = {
       amount: Math.floor(plaidTransaction.amount * 100) * -1,
@@ -57,7 +61,10 @@ const syncTransactions = async (
           id: pendingTxn.id,
           deleted: true,
         });
-        console.log({ deletedPending: pendingTxn.id, postedId: plaidTransaction.transaction_id });
+        console.log({
+          deletedPending: pendingTxn.id,
+          postedId: plaidTransaction.transaction_id,
+        });
       }
     }
 
@@ -94,9 +101,11 @@ const syncTransactions = async (
 
         const pendingDupe = existingByMonth.data?.find((t) => {
           if (!t || t.deleted || !t.pending) return false;
-          const daysDiff = Math.abs(
-            new Date(transaction.date).getTime() - new Date(t.date).getTime()
-          ) / (1000 * 60 * 60 * 24);
+          const daysDiff =
+            Math.abs(
+              new Date(transaction.date).getTime() - new Date(t.date).getTime(),
+            ) /
+            (1000 * 60 * 60 * 24);
           return daysDiff <= 5;
         });
 
@@ -106,7 +115,10 @@ const syncTransactions = async (
             id: pendingDupe.id,
             deleted: true,
           });
-          console.log({ deletedPendingFallback: pendingDupe.id, reason: "posted version arrived" });
+          console.log({
+            deletedPendingFallback: pendingDupe.id,
+            reason: "posted version arrived",
+          });
         }
       }
 
@@ -115,8 +127,10 @@ const syncTransactions = async (
         name: transaction.name!,
       });
       console.log({ created, errors: created.errors });
+      if (created.data && !created.errors?.length) createdCount += 1;
     }
   }
+  return createdCount;
 };
 
 const syncAccounts = async (plaidAccounts: AccountBase[], owner: string) => {
@@ -145,6 +159,39 @@ const syncAccounts = async (plaidAccounts: AccountBase[], owner: string) => {
   return amplifyAccounts;
 };
 
+// The history record is best-effort: a failed write must never fail the sync.
+// Raw GraphQL (not amplifyClient.models) on purpose: the generated client's
+// model map comes from amplify_outputs.json bundled at BUILD time, which only
+// learns about a new model one deploy late. The mutation string + stable
+// AppSync URL work on the very first deploy that has the SyncRun model.
+const writeSyncRun = async (run: {
+  owner: string;
+  startedAt: string;
+  durationMs: number;
+  newTransactionCount: number;
+  error?: string;
+}) => {
+  try {
+    const mutation = `mutation CreateSyncRun($input: CreateSyncRunInput!) {
+      createSyncRun(input: $input) { id }
+    }`;
+    const response = await fetch(config.data.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: process.env.ADMIN_API_KEY!,
+      },
+      body: JSON.stringify({
+        query: mutation,
+        variables: { input: { source: "plaid", ...run } },
+      }),
+    });
+    console.log({ syncRun: await response.json() });
+  } catch (error) {
+    console.log({ syncRunWriteFailed: error });
+  }
+};
+
 export const handler = async (event: LambdaFunctionURLEvent) => {
   console.log({ event });
   const bodyJson = JSON.parse(event.body ?? "{}");
@@ -152,10 +199,16 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
   const owner = bodyJson.owner;
   const date = bodyJson.date ? new Date(bodyJson.date) : new Date();
   const lastMonth = endOfMonth(subMonths(date, 1));
+  const startedAt = new Date();
 
   const aggregatedAccounts = [] as AccountBase[][];
   const aggregatedTransactions = [] as PlaidTransaction[][];
-  const errors = [] as { accessToken: string; error_code: string; error_message: string }[];
+  const errors = [] as {
+    accessToken: string;
+    error_code: string;
+    error_message: string;
+  }[];
+  let newTransactionCount = 0;
   const promises = accessTokens.map(async (accessToken: string) => {
     try {
       const transactionsResponse = await plaidClient.transactionsGet({
@@ -163,10 +216,12 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
         start_date: dateToString(lastMonth),
         end_date: dateToString(date),
       });
-      console.log({ transactionsResponse });
       console.log({ transactionsResponseData: transactionsResponse.data });
 
-      await syncTransactions(transactionsResponse.data.transactions, owner);
+      newTransactionCount += await syncTransactions(
+        transactionsResponse.data.transactions,
+        owner,
+      );
       aggregatedTransactions.push(transactionsResponse.data.transactions);
       await syncAccounts(transactionsResponse.data.accounts, owner);
       aggregatedAccounts.push(transactionsResponse.data.accounts);
@@ -182,11 +237,23 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
   });
   await Promise.all(promises);
 
+  await writeSyncRun({
+    owner,
+    startedAt: startedAt.toISOString(),
+    durationMs: Date.now() - startedAt.getTime(),
+    newTransactionCount,
+    error:
+      errors.length > 0
+        ? errors.map((e) => `${e.error_code}: ${e.error_message}`).join("; ")
+        : undefined,
+  });
+
   return {
     statusCode: 200,
     body: JSON.stringify({
       transactions: aggregatedTransactions,
       accounts: aggregatedAccounts,
+      newTransactionCount,
       message: errors.length > 0 ? "partial" : "success!",
       errors,
     }),
