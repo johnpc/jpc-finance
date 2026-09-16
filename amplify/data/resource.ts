@@ -40,6 +40,7 @@ const schema = a.schema({
       transactionMonth: a.string().required(),
       date: a.date().required(),
       name: a.string().required(),
+      displayName: a.string(),
       pending: a.boolean().required(),
       deleted: a.boolean(),
       tellerioTransactionId: a.string(),
