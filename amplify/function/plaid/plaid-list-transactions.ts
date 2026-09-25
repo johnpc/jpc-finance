@@ -1,6 +1,7 @@
 import { LambdaFunctionURLEvent } from "aws-lambda";
 import { client as plaidClient } from "../helpers/get-plaid-client";
 import { client as amplifyClient } from "../helpers/get-amplify-client";
+import { findContentDuplicate } from "../helpers/content-dedupe";
 import config from "../../../amplify_outputs.json";
 import { endOfMonth, subMonths } from "date-fns";
 import { AccountBase } from "plaid";
@@ -32,6 +33,7 @@ const syncTransactions = async (
   owner: string,
 ) => {
   let createdCount = 0;
+  const batchIds = new Set(plaidTransactions.map((t) => t.transaction_id));
   for (const plaidTransaction of plaidTransactions) {
     const transaction = {
       amount: Math.floor(plaidTransaction.amount * 100) * -1,
@@ -122,6 +124,22 @@ const syncTransactions = async (
         }
       }
 
+      // Cross-connection guard: a re-linked bank issues brand-new
+      // transaction_ids for the same history, so the id check above can't
+      // catch those re-imports.
+      const contentDupe = await findContentDuplicate(
+        amplifyClient.models,
+        { ...transaction, name: transaction.name! },
+        batchIds,
+      );
+      if (contentDupe) {
+        console.log({
+          skippedCrossConnectionDuplicate: transaction.plaidTransactionId,
+          existing: (contentDupe as { id?: string }).id,
+        });
+        continue;
+      }
+
       const created = await amplifyClient.models.Transaction.create({
         ...transaction,
         name: transaction.name!,
@@ -209,7 +227,9 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
     error_message: string;
   }[];
   let newTransactionCount = 0;
-  const promises = accessTokens.map(async (accessToken: string) => {
+  // Sequential on purpose: syncing two connections that cover the same bank
+  // concurrently races the exists-checks and creates duplicates.
+  for (const accessToken of accessTokens as string[]) {
     try {
       const transactionsResponse = await plaidClient.transactionsGet({
         access_token: accessToken,
@@ -225,17 +245,21 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
       aggregatedTransactions.push(transactionsResponse.data.transactions);
       await syncAccounts(transactionsResponse.data.accounts, owner);
       aggregatedAccounts.push(transactionsResponse.data.accounts);
-    } catch (e: any) {
-      const plaidError = e?.response?.data;
+    } catch (e: unknown) {
+      const err = e as {
+        response?: { data?: { error_code?: string; error_message?: string } };
+        message?: string;
+      };
+      const plaidError = err?.response?.data;
       console.log({ plaidError, accessToken });
       errors.push({
         accessToken: accessToken.slice(0, 20) + "...",
         error_code: plaidError?.error_code || "UNKNOWN",
-        error_message: plaidError?.error_message || e?.message || "Unknown error",
+        error_message:
+          plaidError?.error_message || err?.message || "Unknown error",
       });
     }
-  });
-  await Promise.all(promises);
+  }
 
   await writeSyncRun({
     owner,

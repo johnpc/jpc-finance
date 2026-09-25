@@ -12,7 +12,7 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
   const body = event.body ? JSON.parse(event.body) : {};
   const accessToken = body.access_token;
 
-  const payload: any = {
+  const payload: Record<string, unknown> = {
     user: { client_user_id: event.requestContext.requestId },
     client_name: "finance.jpc.io",
     language: "en",
@@ -37,7 +37,8 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
     return {
       statusCode: 400,
       body: JSON.stringify({
-        error: (e as AxiosError).response?.data || "Failed to create link token",
+        error:
+          (e as AxiosError).response?.data || "Failed to create link token",
       }),
     };
   }
@@ -46,7 +47,10 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
     statusCode: 200,
     body: JSON.stringify({
       tokenResponse: (
-        tokenResponse as AxiosResponse<LinkTokenCreateResponse, { data: string }>
+        tokenResponse as AxiosResponse<
+          LinkTokenCreateResponse,
+          { data: string }
+        >
       ).data,
       message: "success!",
     }),

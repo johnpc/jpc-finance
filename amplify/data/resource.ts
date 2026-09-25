@@ -15,6 +15,7 @@ const schema = a.schema({
       accessToken: a.string().required(),
       userId: a.string().required(),
       owner: a.string().required(),
+      institutionName: a.string(),
     })
     .secondaryIndexes((index) => [index("userId")])
     .authorization((allow) => [allow.custom(), allow.owner()]),

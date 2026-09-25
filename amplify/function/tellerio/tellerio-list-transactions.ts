@@ -1,6 +1,7 @@
 import { LambdaFunctionURLEvent } from "aws-lambda";
 import { listTransactions } from "../helpers/get-tellerio-client";
 import { client } from "../helpers/get-amplify-client";
+import { findContentDuplicate } from "../helpers/content-dedupe";
 import { Schema } from "../../data/resource";
 
 type TellerIoTransaction = {
@@ -82,6 +83,7 @@ const syncTransactions = async (
       tellerioTransactionId: tellerioTransaction.id,
       owner,
     }));
+  const batchIds = new Set(transactions.map((t) => t.tellerioTransactionId));
   const transactionPromises = transactions.map(async (transaction) => {
     const existingTransactions =
       await client.models.Transaction.listTransactionByTellerioTransactionId({
@@ -89,6 +91,20 @@ const syncTransactions = async (
       });
     const existingTransaction = existingTransactions.data?.find((t) => t);
     if (!existingTransaction) {
+      // Cross-connection guard: a re-linked bank issues brand-new Teller
+      // transaction ids for the same history (see content-dedupe.ts).
+      const contentDupe = await findContentDuplicate(
+        client.models,
+        transaction,
+        batchIds,
+      );
+      if (contentDupe) {
+        console.log({
+          skippedCrossConnectionDuplicate: transaction.tellerioTransactionId,
+          existing: (contentDupe as { id?: string }).id,
+        });
+        return;
+      }
       const created = await client.models.Transaction.create({
         ...transaction,
       });

@@ -42,6 +42,9 @@ const plaidListTransactionsFunction = defineFunction({
   entry: "./function/plaid/plaid-list-transactions.ts",
   timeoutSeconds: 300,
 });
+const plaidRemoveItemFunction = defineFunction({
+  entry: "./function/plaid/plaid-remove-item.ts",
+});
 
 const backend = defineBackend({
   authFunction,
@@ -50,6 +53,7 @@ const backend = defineBackend({
   plaidCreateLinkTokenFunction,
   plaidExchangePublicTokenFunction,
   plaidListTransactionsFunction,
+  plaidRemoveItemFunction,
   auth,
   data: data(authFunction),
   storage,
@@ -69,6 +73,7 @@ const functions = [
   backend.plaidCreateLinkTokenFunction,
   backend.plaidExchangePublicTokenFunction,
   backend.plaidListTransactionsFunction,
+  backend.plaidRemoveItemFunction,
 ];
 
 functions.forEach((fn, index) => {
@@ -78,6 +83,7 @@ functions.forEach((fn, index) => {
     "plaidCreateLinkTokenFunction",
     "plaidExchangePublicTokenFunction",
     "plaidListTransactionsFunction",
+    "plaidRemoveItemFunction",
   ];
 
   const underlyingLambda = fn.resources.lambda as LambdaFunction;
