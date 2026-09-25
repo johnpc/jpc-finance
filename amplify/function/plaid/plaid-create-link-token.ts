@@ -1,4 +1,9 @@
-import { CountryCode, LinkTokenCreateResponse, Products } from "plaid";
+import {
+  CountryCode,
+  LinkTokenCreateRequest,
+  LinkTokenCreateResponse,
+  Products,
+} from "plaid";
 import { client } from "../helpers/get-plaid-client";
 import { LambdaFunctionURLEvent } from "aws-lambda";
 import { AxiosError, AxiosResponse } from "axios";
@@ -12,7 +17,7 @@ export const handler = async (event: LambdaFunctionURLEvent) => {
   const body = event.body ? JSON.parse(event.body) : {};
   const accessToken = body.access_token;
 
-  const payload: Record<string, unknown> = {
+  const payload: LinkTokenCreateRequest = {
     user: { client_user_id: event.requestContext.requestId },
     client_name: "finance.jpc.io",
     language: "en",
