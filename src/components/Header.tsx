@@ -1,57 +1,35 @@
-"use client";
 import {
-  Card,
-  View,
-  Heading,
-  Text,
-  useTheme,
-  Grid,
-  Image,
   Flex,
+  Heading,
+  Image,
+  Text,
+  View,
+  useTheme,
 } from "@aws-amplify/ui-react";
+
 export const Header = () => {
   const { tokens } = useTheme();
   return (
-    <Card variation="elevated" marginBottom={tokens.space.small}>
-    <Grid
-      templateColumns="3fr 1fr"
-      templateRows="4rem"
-      gap={tokens.space.small}
+    <View
+      as="header"
+      padding={tokens.space.medium}
+      marginBottom={tokens.space.medium}
+      boxShadow="small"
     >
-      <View>
-        <Card>
-          <Flex
-            direction="row"
-            justifyContent="flex-start"
-            alignItems="stretch"
-            alignContent="flex-start"
-            wrap="nowrap"
-            gap="1rem"
-          >
-            <View height="2rem">
-              <Image
-                objectFit={"initial"}
-                src="/maskable.png"
-                alt="icon"
-                borderRadius={tokens.radii.large}
-                height={"50px"}
-              ></Image>
-            </View>
-            <View height="2rem">
-              <Heading level={5}>
-              finance.jpc.io
-              </Heading>
-              <Text
-                as="span"
-                fontSize={"small"}
-              >
-                Budget tracker
-              </Text>
-            </View>
-          </Flex>
-        </Card>
-      </View>
-    </Grid>
-    </Card>
+      <Flex maxWidth="760px" margin="0 auto" alignItems="center" gap="0.75rem">
+        <Image
+          src="/maskable.png"
+          alt=""
+          height="44px"
+          borderRadius={tokens.radii.large}
+        />
+        <Flex direction="column" gap="0">
+          <Heading level={5}>finance.jpc.io</Heading>
+          <Text as="span" fontSize="small" color="font.tertiary">
+            Budget tracker
+          </Text>
+        </Flex>
+      </Flex>
+    </View>
   );
 };

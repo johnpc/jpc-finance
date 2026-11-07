@@ -1,102 +1,39 @@
-import { queryKeys } from "../../lib/queryKeys";
 import {
   AccountSettings,
-  Button,
   Card,
   Divider,
   Heading,
   Text,
-  useTheme,
 } from "@aws-amplify/ui-react";
-import { LocalNotifications, Weekday } from "@capacitor/local-notifications";
-import { Capacitor } from "@capacitor/core";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuthHook";
-import { useDate } from "../../hooks/useDateHook";
-import { useBudget } from "../../hooks/useBudget";
-import { useAmplifyClient } from "../../hooks/useAmplifyClient";
+import { useError } from "../../hooks/useErrorHook";
+import LinkedBanks from "./LinkedBanks";
+import SyncHistory from "./SyncHistory";
+import ResetBudget from "./ResetBudget";
 import SignOutButton from "./SignOutButton";
-import { useErrorHandler } from "../../hooks/useErrorHandler";
 
 export default function SettingsPage() {
-  const { tokens } = useTheme();
   const { user } = useAuth();
-  const { date } = useDate();
-  const { data: budget } = useBudget(date);
-  const client = useAmplifyClient();
-  const queryClient = useQueryClient();
-  const { withErrorHandling } = useErrorHandler();
-
-  const handleSuccess = () => alert("success!");
-
-  const onResetBudget = async () => {
-    if (!budget) return;
-    await withErrorHandling(async () => {
-      const promises = budget.budgetCategories.map(async (category) => {
-        const promises = category.transactions.map((transaction) =>
-          client.models.Transaction.update({
-            id: transaction.id,
-            budgetCategoryTransactionsId: null,
-          }),
-        );
-        await Promise.all(promises);
-      });
-      await Promise.all(promises);
-      queryClient.invalidateQueries({ queryKey: ["budget"] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.allTransactions() });
-    }, "Failed to reset budget");
-  };
-
-  const onSetupNotifications = async () => {
-    await withErrorHandling(async () => {
-      await LocalNotifications.requestPermissions();
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            title: "Update your budget",
-            body: "Time to categorize your transactions for the week",
-            id: 13,
-            schedule: {
-              allowWhileIdle: true,
-              on: { weekday: Weekday.Friday, hour: 13 },
-            },
-          },
-        ],
-      });
-    }, "Failed to setup notifications");
-  };
+  const { showSuccess } = useError();
 
   return (
-    <Card>
-      <Heading>{user?.signInDetails?.loginId}</Heading>
-      <AccountSettings.ChangePassword onSuccess={handleSuccess} />
-      <Divider style={{ margin: "20px" }} />
-      <SignOutButton />
-      <Divider style={{ margin: "20px" }} />
-      <AccountSettings.DeleteUser onSuccess={handleSuccess} />
-      <Divider style={{ margin: "20px" }} />
-      {Capacitor.getPlatform() === "ios" && (
-        <Button
-          isFullWidth
-          variation="primary"
-          marginBottom={tokens.space.small}
-          colorTheme="info"
-          onClick={onSetupNotifications}
-        >
-          Setup Notifications
-        </Button>
-      )}
-      {budget && (
-        <>
-          <Button isFullWidth variation="primary" onClick={onResetBudget}>
-            Reset Budget
-          </Button>
-          <Text fontSize="xs" as="p">
-            This will uncategorize all transactions for the month in case you'd
-            like to recategorize everything.
-          </Text>
-        </>
-      )}
-    </Card>
+    <>
+      <LinkedBanks />
+      <SyncHistory />
+      <ResetBudget />
+      <Card variation="outlined">
+        <Heading level={5}>Account</Heading>
+        <Text color="font.tertiary" marginBottom="1rem">
+          {user?.signInDetails?.loginId}
+        </Text>
+        <SignOutButton />
+        <Divider marginTop="1rem" marginBottom="1rem" />
+        <AccountSettings.ChangePassword
+          onSuccess={() => showSuccess("Password changed")}
+        />
+        <Divider marginTop="1rem" marginBottom="1rem" />
+        <AccountSettings.DeleteUser />
+      </Card>
+    </>
   );
 }

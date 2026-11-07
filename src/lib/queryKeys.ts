@@ -1,9 +1,12 @@
-// Centralized query key factory to ensure consistency and prevent duplicate requests
+// Keys are scoped by the "MM/yy" month string (not a Date's ISO string, which
+// would mint a new cache entry for every `new Date()`).
 export const queryKeys = {
-  budget: (date: Date) => ["budget", date.toISOString()] as const,
+  budget: (month: string) => ["budget", month] as const,
   budgets: () => ["budget"] as const,
-  transactions: (date: Date) => ["transactions", date.toISOString()] as const,
+  transactions: (month: string) => ["transactions", month] as const,
   allTransactions: () => ["transactions"] as const,
   accounts: () => ["accounts"] as const,
-  settings: () => ["settings"] as const,
+  plaidConnections: () => ["plaidConnections"] as const,
+  plaidReauth: () => ["plaidReauth"] as const,
+  syncHistory: () => ["syncHistory"] as const,
 } as const;

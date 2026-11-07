@@ -6,76 +6,44 @@ import {
   View,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { toDollars } from "../../lib/currency";
-import { useDate } from "../../hooks/useDateHook";
-import { useBudget } from "../../hooks/useBudget";
+import { budgetSummary } from "../../lib/budgetMath";
+import { formatMoney } from "../../lib/currency";
+import { CategoryWithTransactions } from "../../lib/types";
 
-export default function BudgetProgress() {
+export default function BudgetProgress({
+  categories,
+}: {
+  categories: CategoryWithTransactions[];
+}) {
   const { tokens } = useTheme();
-  const { date } = useDate();
-  const { data: budget } = useBudget(date);
-
-  if (!budget) return null;
-
-  const incomeCategory = budget.budgetCategories.filter(
-    (c) => c.type === "Income",
-  );
-  const incomeAmount = incomeCategory.reduce(
-    (acc, c) => acc + c.plannedAmount,
-    0,
-  );
-
-  const expenseAmount = budget.budgetCategories
-    .filter((c) => c.type !== "Income")
-    .reduce((acc, c) => c.plannedAmount + acc, 0);
-
-  const transactionExpenseAmount = budget.budgetCategories
-    .filter((c) => c.type !== "Income")
-    .reduce(
-      (acc, c) => c.transactions.reduce((sum, t) => sum + t.amount, 0) + acc,
-      0,
-    );
-
-  const isBalanced = incomeAmount === expenseAmount;
-  const difference = incomeAmount - expenseAmount;
+  const s = budgetSummary(categories);
 
   return (
-    <>
-      <Card variation="elevated">
-        {isBalanced ? (
-          <View textAlign="center">
-            <Heading>✅ Your budget is balanced</Heading>
-          </View>
-        ) : (
-          <View textAlign="center">
-            <Heading>❌ Not balanced</Heading>
-            <Text as="p" color="font.tertiary">
-              {difference > 0
-                ? `You have $${toDollars(difference).toFixed(2)} uncategorized`
-                : `Your plan overspends by $${toDollars(-difference).toFixed(2)} compared to your income`}
-            </Text>
-          </View>
-        )}
-      </Card>
-      <Card>
-        <View textAlign="center">
-          <Text as="p">
-            Spent ${toDollars(transactionExpenseAmount).toFixed(2)} of $
-            {toDollars(incomeAmount).toFixed(2)}
+    <Card variation="elevated" marginBottom="1rem">
+      <View textAlign="center">
+        <Heading level={5}>
+          {s.isBalanced ? "✅ Your budget is balanced" : "❌ Not balanced"}
+        </Heading>
+        {!s.isBalanced && (
+          <Text fontSize="small" color="font.tertiary">
+            {s.difference > 0
+              ? `${formatMoney(s.difference)} of income isn't assigned yet`
+              : `Your plan spends ${formatMoney(s.difference)} more than your income`}
           </Text>
-        </View>
-        <Loader
-          filledColor={
-            transactionExpenseAmount > incomeAmount
-              ? tokens.colors.red[60]
-              : tokens.colors.green[60]
-          }
-          variation="linear"
-          percentage={(transactionExpenseAmount / incomeAmount) * 100}
-          isDeterminate
-          isPercentageTextHidden
-        />
-      </Card>
-    </>
+        )}
+        <Text marginTop="0.75rem">
+          Spent {formatMoney(s.spent)} of {formatMoney(s.plannedIncome)}
+        </Text>
+      </View>
+      <Loader
+        variation="linear"
+        isDeterminate
+        isPercentageTextHidden
+        percentage={s.progressPercent}
+        filledColor={
+          s.isOverspent ? tokens.colors.red[60] : tokens.colors.green[60]
+        }
+      />
+    </Card>
   );
 }

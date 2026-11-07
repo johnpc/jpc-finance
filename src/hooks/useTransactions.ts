@@ -4,32 +4,23 @@ import { TransactionEntity } from "../lib/types";
 import { queryKeys } from "../lib/queryKeys";
 import { fetchAllPages } from "../lib/amplify-types";
 import { formatBudgetMonth } from "../lib/dateUtils";
+import { toActiveTransactions } from "../lib/mappers";
 import { CACHE_TIMES } from "../lib/constants";
 
+/** Every live (non-deleted) transaction in the month, newest first. */
 export function useTransactions(date: Date) {
   const client = useAmplifyClient();
+  const transactionMonth = formatBudgetMonth(date);
 
   return useQuery({
-    queryKey: queryKeys.transactions(date),
+    queryKey: queryKeys.transactions(transactionMonth),
     staleTime: CACHE_TIMES.STALE_TIME,
     gcTime: CACHE_TIMES.GC_TIME,
     queryFn: async (): Promise<TransactionEntity[]> => {
-      const transactionMonth = formatBudgetMonth(date);
-
-      // Fetch all transactions with pagination
-      const allTransactions = await fetchAllPages(
-        { transactionMonth },
-        (params) =>
-          client.models.Transaction.listTransactionByTransactionMonth(params),
+      const rows = await fetchAllPages({ transactionMonth }, (params) =>
+        client.models.Transaction.listTransactionByTransactionMonth(params),
       );
-
-      return allTransactions.map((t) => ({
-        ...t,
-        amount: t.amount * -1,
-        deleted: t.deleted ?? false,
-        date: new Date(t.date),
-        budgetCategoryId: t.budgetCategoryTransactionsId,
-      }));
+      return toActiveTransactions(rows);
     },
   });
 }

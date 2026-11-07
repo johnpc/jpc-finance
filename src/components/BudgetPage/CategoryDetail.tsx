@@ -1,141 +1,104 @@
-import { queryKeys } from "../../lib/queryKeys";
 import {
   Button,
   Card,
+  Flex,
   Heading,
   Text,
-  Flex,
-  Loader,
+  TextField,
 } from "@aws-amplify/ui-react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { useAmplifyClient } from "../../hooks/useAmplifyClient";
-import { useErrorHandler } from "../../hooks/useErrorHandler";
-import { BudgetCategoryEntity, TransactionEntity } from "../../lib/types";
-import { toDollars } from "../../lib/currency";
+import { ArrowBack } from "@mui/icons-material";
+import { TransactionList } from "../transactions/TransactionList";
+import { TransactionDialog } from "../transactions/TransactionDialog";
+import { useCategoryDetail } from "../../hooks/useCategoryDetail";
+import { categoryStatus, remainingText } from "../../lib/categoryStatus";
+import { formatMoney } from "../../lib/currency";
+import { CategoryEntity, CategoryWithTransactions } from "../../lib/types";
 
-function TransactionCard({
-  transaction,
-  onRemove,
-  isRemoving,
-}: {
-  transaction: TransactionEntity;
-  onRemove: () => void;
-  isRemoving: boolean;
-}) {
-  const amount = toDollars(transaction.amount) * -1;
-
-  return (
-    <Card marginBottom="10px">
-      <Flex direction="row" justifyContent="space-between" alignItems="center">
-        <Flex direction="column" gap="5px">
-          <Heading level={6}>
-            {transaction.date.toLocaleDateString(undefined, {
-              day: "numeric",
-              month: "long",
-            })}
-          </Heading>
-          <Text>{transaction.name}</Text>
-          <Button
-            size="small"
-            variation="warning"
-            onClick={onRemove}
-            disabled={isRemoving}
-          >
-            {isRemoving ? <Loader size="small" /> : "Uncategorize"}
-          </Button>
-        </Flex>
-        <Heading level={4} color={amount > 0 ? "green" : "red"}>
-          ${Math.abs(amount).toFixed(2)}
-        </Heading>
-      </Flex>
-    </Card>
-  );
-}
+type Props = {
+  category: CategoryWithTransactions;
+  allCategories: CategoryEntity[];
+  onBack: () => void;
+};
 
 export default function CategoryDetail({
   category,
+  allCategories,
   onBack,
-}: {
-  category: BudgetCategoryEntity;
-  onBack: () => void;
-}) {
-  const client = useAmplifyClient();
-  const queryClient = useQueryClient();
-  const { withErrorHandling } = useErrorHandler();
-  const [removingId, setRemovingId] = useState<string | null>(null);
-
-  const uncategorizeMutation = useMutation({
-    mutationFn: async (transactionId: string) => {
-      await client.models.Transaction.update({
-        id: transactionId,
-        budgetCategoryTransactionsId: null,
-      });
-    },
-    onMutate: async (transactionId) => {
-      setRemovingId(transactionId);
-      await queryClient.cancelQueries({ queryKey: queryKeys.budgets() });
-      await queryClient.cancelQueries({
-        queryKey: queryKeys.allTransactions(),
-      });
-      const previous = queryClient.getQueryData(queryKeys.budgets());
-      return { previous };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.budgets() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.allTransactions() });
-      setRemovingId(null);
-    },
-    onError: (error, _transactionId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(queryKeys.budgets(), context.previous);
-      }
-      withErrorHandling(
-        () => Promise.reject(error),
-        "Failed to uncategorize transaction",
-      );
-      setRemovingId(null);
-    },
-  });
-
-  const planned = toDollars(category.plannedAmount);
-  let total = category.transactions.reduce(
-    (acc, t) => toDollars(t.amount) + acc,
-    0,
+}: Props) {
+  const { form, selection, deleteCategory, uncategorize } = useCategoryDetail(
+    category,
+    onBack,
   );
-  if (category.type === "Income") total = total * -1;
-  const remaining = planned - total;
-
-  const handleRemove = async (transaction: TransactionEntity) => {
-    uncategorizeMutation.mutate(transaction.id);
-  };
+  const status = categoryStatus(category);
 
   return (
     <>
-      <Heading level={3}>
-        {category.type} - {category.name}
-      </Heading>
-      <Card marginBottom="20px">
-        <Text>Planned: ${planned.toFixed(2)}</Text>
-        <Text>Total: ${total.toFixed(2)}</Text>
-        <Text>Remaining: ${remaining.toFixed(2)}</Text>
-        <Text>{category.transactions.length} transactions</Text>
-      </Card>
-
-      {category.transactions
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
-        .map((transaction) => (
-          <TransactionCard
-            key={transaction.id}
-            transaction={transaction}
-            onRemove={() => handleRemove(transaction)}
-            isRemoving={removingId === transaction.id}
-          />
-        ))}
-
-      <Button isFullWidth variation="primary" onClick={onBack} marginTop="20px">
-        Done
+      <Button variation="link" onClick={onBack} gap="0.25rem" paddingLeft="0">
+        <ArrowBack fontSize="small" /> Back to budget
       </Button>
+      <Heading level={4} marginBottom="1rem">
+        {category.type} · {category.name}
+      </Heading>
+      <Card variation="outlined" marginBottom="1rem">
+        <form onSubmit={form.submit}>
+          <Flex direction="column" gap="0.75rem">
+            <TextField
+              label="Name"
+              value={form.name}
+              onChange={(e) => form.setName(e.target.value)}
+              hasError={!!form.nameError}
+              errorMessage={form.nameError}
+            />
+            <TextField
+              label="Monthly target ($)"
+              inputMode="decimal"
+              value={form.amount}
+              onChange={(e) => form.setAmount(e.target.value)}
+              hasError={!!form.amountError}
+              errorMessage={form.amountError}
+            />
+            <Flex justifyContent="space-between" alignItems="center">
+              <Text color="font.tertiary">
+                {formatMoney(status.amount)} {status.label} ·{" "}
+                {remainingText(category)}
+              </Text>
+              <Button
+                type="submit"
+                variation="primary"
+                size="small"
+                isDisabled={!form.isDirty}
+              >
+                Save
+              </Button>
+            </Flex>
+          </Flex>
+        </form>
+      </Card>
+      <Heading level={6} marginBottom="0.5rem">
+        Transactions ({category.transactions.length})
+      </Heading>
+      <TransactionList
+        transactions={category.transactions}
+        emptyText="Drag transactions here from the Uncategorized tray, or pick this category in a transaction's details."
+        onSelect={selection.select}
+        actionLabel="Uncategorize"
+        onAction={(t) => uncategorize(t.id)}
+      />
+      <Button
+        variation="link"
+        colorTheme="error"
+        marginTop="1.5rem"
+        onClick={deleteCategory}
+      >
+        Delete category
+      </Button>
+      {selection.selected && (
+        <TransactionDialog
+          transaction={selection.selected}
+          categories={allCategories}
+          onClose={selection.clear}
+        />
+      )}
     </>
   );
 }

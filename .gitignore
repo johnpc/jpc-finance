@@ -33,3 +33,5 @@ amplifyconfiguration*
 
 # Local tracking files
 improvements.md
+# Test coverage output
+coverage

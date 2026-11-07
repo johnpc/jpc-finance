@@ -16,3 +16,6 @@ export const DEBOUNCE_TIMES = {
   SUBSCRIPTION_INVALIDATION: 500, // ms
   TOAST_DURATION: 5000, // ms
 } as const;
+
+export const APP_STORE_URL =
+  "https://apps.apple.com/us/app/jpc-finance/id6499078837";

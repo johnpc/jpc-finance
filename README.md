@@ -1,6 +1,6 @@
 # finance.jpc.io
 
-A dead-simple monthly budget tracking app, for web and ios (including iOS to use FinanceKit data).
+A dead-simple monthly budget tracking app for the web. The native iOS app (with Apple Card / FinanceKit support) shares this backend.
 
 Zero-based budgeting syncs with your financial institutions and resets every month, so each month you can start fresh to meet your financial goals.
 
@@ -14,8 +14,7 @@ Clone the repo, install dependencies, deploy backend resources:
 git clone git@github.com:johnpc/jpc-finance.git
 cd jpc-finance
 npm install
-npx cap sync
-npx amplify sandbox
+npx ampx sandbox
 ```
 
 You'll also need to set up your environment variables:
@@ -23,27 +22,26 @@ You'll also need to set up your environment variables:
 ```bash
 cp .env.example .env
 # Then fill in the values with your own by following instructions in .env
-
-# To enable TellerIO, you must upload the private key and certificate to s3
-aws s3 cp ./private_key.pem  s3://<your bucket name ./amplify_outputs.json>/internal/
-aws s3 cp ./certificate.pem  s3://<your bucket name ./amplify_outputs.json>/internal/
 ```
 
-In `package.json`, update your `prod-config` script to reference your own app id and profile name.
+Bank sync is Plaid-only. In `package.json`, update your `prod-config` script to reference your own app id and profile name.
 
-Then, to run the frontend app
+Then run the web app:
 
 ```bash
-# on web
 npm run dev
 ```
 
-or
+The iOS app lives in its own repo, [johnpc/jpc.finance.native](https://github.com/johnpc/jpc.finance.native), and shares this backend.
+
+## Testing
 
 ```bash
-# on ios
-npm run ios
+npm test                # unit tests (Vitest)
+npm run test:coverage   # with the 80% coverage gate on src/lib
 ```
+
+The pre-commit hook runs the coverage gate, the build, and lint-staged.
 
 ## Deploying
 

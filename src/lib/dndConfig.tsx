@@ -8,6 +8,9 @@ import {
 import { PreviewGenerator } from "react-dnd-preview";
 import { knightImage } from "../components/BudgetPage/knightImage";
 
+export const TRANSACTION_DRAG_TYPE = "TRANSACTION";
+export type TransactionDragItem = { id: string };
+
 export const generatePreview: PreviewGenerator = ({ style }) => (
   <img style={style} src={knightImage} alt="dragging" />
 );

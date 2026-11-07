@@ -1,17 +1,12 @@
-import { Schema } from "../../amplify/data/resource";
-
-// Extend Amplify types to properly support pagination
-export type PaginatedListParams<T = unknown> = T & {
-  nextToken?: string | null;
-};
-
 export type PaginatedResponse<T> = {
   data: T[];
   nextToken?: string | null;
-  errors?: Array<{ message: string }>;
 };
 
-// Helper to safely handle paginated queries
+/**
+ * Follow nextToken to the end. AppSync applies `limit` before server-side
+ * filtering, so a single page can silently miss rows.
+ */
 export async function fetchAllPages<T, P extends Record<string, unknown>>(
   baseParams: P,
   fetchPage: (
@@ -20,18 +15,23 @@ export async function fetchAllPages<T, P extends Record<string, unknown>>(
 ): Promise<T[]> {
   const allItems: T[] = [];
   let nextToken: string | null | undefined = null;
-
   do {
-    const response = await fetchPage({ ...baseParams, nextToken });
+    const response: PaginatedResponse<T> = await fetchPage({
+      ...baseParams,
+      nextToken,
+    });
     allItems.push(...response.data);
     nextToken = response.nextToken;
   } while (nextToken);
-
   return allItems;
 }
 
-export type SchemaTransaction = Schema["Transaction"]["type"];
-export type SchemaAccount = Schema["Account"]["type"];
-export type SchemaSettings = Schema["Settings"]["type"];
-export type SchemaBudgetCategory = Schema["BudgetCategory"]["type"];
-export type SchemaBudget = Schema["Budget"]["type"];
+type MaybeErrors = { errors?: ReadonlyArray<{ message: string }> | null };
+
+/** Amplify model calls report GraphQL errors in the result instead of throwing. */
+export const throwOnErrors = <T extends MaybeErrors>(result: T): T => {
+  if (result.errors?.length) {
+    throw new Error(result.errors.map((e) => e.message).join("; "));
+  }
+  return result;
+};
