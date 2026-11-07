@@ -7,7 +7,6 @@ import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { storage } from "./storage/resource";
 import dotenv from "dotenv";
-import { tellerioListTransactionsFunction } from "./function/tellerio/resource";
 dotenv.config();
 
 // Validate required environment variables
@@ -49,7 +48,6 @@ const plaidRemoveItemFunction = defineFunction({
 const backend = defineBackend({
   authFunction,
   helloWorldFunction,
-  tellerioListTransactionsFunction,
   plaidCreateLinkTokenFunction,
   plaidExchangePublicTokenFunction,
   plaidListTransactionsFunction,
@@ -69,7 +67,6 @@ underlyingAuthLambda.addEnvironment(
 const outputs: Record<string, string> = {};
 const functions = [
   backend.helloWorldFunction,
-  backend.tellerioListTransactionsFunction,
   backend.plaidCreateLinkTokenFunction,
   backend.plaidExchangePublicTokenFunction,
   backend.plaidListTransactionsFunction,
@@ -79,7 +76,6 @@ const functions = [
 functions.forEach((fn, index) => {
   const functionNames = [
     "helloWorldFunction",
-    "tellerioListTransactionsFunction",
     "plaidCreateLinkTokenFunction",
     "plaidExchangePublicTokenFunction",
     "plaidListTransactionsFunction",
